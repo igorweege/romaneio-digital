@@ -27,7 +27,17 @@ export default async function AdminPage() {
         <p className="mt-2 text-lg text-gray-600">Bem-vindo, {session.user?.name}.</p>
 
         <div className="mt-8 p-4 sm:p-6 border rounded-lg bg-white shadow-sm">
-          <h2 className="text-2xl font-semibold">Gerenciamento de Usuários</h2>
+          {/* --- INÍCIO DA ALTERAÇÃO --- */}
+<div className="flex justify-between items-center border-b pb-4">
+  <h2 className="text-2xl font-semibold">Gerenciamento de Usuários</h2>
+  <a
+    href="/admin/novo-usuario"
+    className="inline-flex items-center gap-x-2 rounded-md bg-osirnet-blue px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-osirnet-blue"
+  >
+    Adicionar Usuário
+  </a>
+</div>
+{/* --- FIM DA ALTERAÇÃO --- */}
 
           {/* --- NOVA PARTE: TABELA DE USUÁRIOS --- */}
           <div className="mt-6 flow-root">
