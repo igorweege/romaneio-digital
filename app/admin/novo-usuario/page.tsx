@@ -2,22 +2,43 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation'; // Importamos o useRouter
 
-// Por enquanto, o formulário apenas mostra os dados no console.
-// A lógica de salvar no banco virá no próximo passo.
 export default function NewUserPage() {
+  const router = useRouter(); // Inicializamos o router aqui
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'USER' | 'ADMIN'>('USER');
-
+  
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ name, email, password, role });
-    // A lógica de verdade para salvar o usuário virá aqui.
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, role }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Falha ao criar usuário');
+      }
+
+      // Se deu tudo certo, redireciona para a página de admin
+      router.push('/admin');
+
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -27,6 +48,7 @@ export default function NewUserPage() {
         <p className="mt-2 text-sm text-gray-600">Crie uma nova conta e defina seu nível de acesso.</p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6 p-8 bg-white rounded-lg shadow-md border">
+          {/* ... o resto do formulário continua igual ... */}
           {/* Campo Nome */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium leading-6 text-gray-900">Nome Completo</label>
@@ -44,7 +66,7 @@ export default function NewUserPage() {
           {/* Campo Senha */}
           <div>
             <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">Senha</label>
-             <div className="mt-2">
+            <div className="mt-2">
               <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-osirnet-blue focus:border-osirnet-blue" />
             </div>
           </div>
@@ -57,7 +79,7 @@ export default function NewUserPage() {
               </select>
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-600 text-center font-medium">{error}</p>}
 
           <div className="flex items-center justify-end gap-x-4 border-t pt-6">
             <a href="/admin" className="text-sm font-semibold leading-6 text-gray-900">Cancelar</a>
