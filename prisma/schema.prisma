@@ -1,0 +1,39 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  romaneios Romaneio[]
+}
+
+model Romaneio {
+  id             String    @id @default(cuid())
+  fileName       String
+  storageUrl     String
+  signedUrl      String?
+  signatureToken String    @unique
+  isSigned       Boolean   @default(false)
+  signerName     String?
+  signerIp       String?
+  signedAt       DateTime?
+  createdAt      DateTime  @default(now())
+  author         User      @relation(fields: [authorId], references: [id])
+  authorId       String
+}
+
+enum Role {
+  ADMIN
+  USER
+}
