@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     
     // 7. Faz o upload do novo PDF assinado para o Vercel Blob
     const signedFilename = `assinado-${romaneio.fileName}`;
-    const signedBlob = await put(signedFilename, newPdfBytes, {
+    const signedBlob = await put(signedFilename, Buffer.from(newPdfBytes), {
       access: 'public',
       contentType: 'application/pdf',
     });
