@@ -22,7 +22,8 @@
     "pdf-lib": "^1.17.1",
     "react": "^18",
     "react-dom": "^18",
-    "react-signature-canvas": "^1.1.0-alpha.2"
+    "react-signature-canvas": "^1.1.0-alpha.2",
+    "resend": "^4.6.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
