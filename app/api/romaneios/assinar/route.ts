@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     
     await resend.emails.send({
       from: 'onboarding@resend.dev',
-      to: 'igor.weege@osirnet.com.br',
+      to: 'vieiraweege@gmail.com',
       subject: `Documento Assinado: ${romaneio.fileName}`,
       html: `<p>Olá,</p><p>O documento <strong>${romaneio.fileName}</strong> foi assinado com sucesso por <strong>${signerName}</strong>.</p><p>O PDF assinado está em anexo.</p><p>Obrigado!</p>`,
       attachments: [
