@@ -1,19 +1,22 @@
-// app/api/romaneios/route.ts
-import { put } from '@vercel/blob';
+// app/api/romaneios/route.ts - VERSÃO ATUALIZADA COM UPLOADCARE
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { randomBytes } from 'crypto';
+import { UploadClient } from '@uploadcare/upload-client'; // 1. Importar o cliente do Uploadcare
+
+// 2. Inicializar o cliente do Uploadcare com a chave pública
+const uploadClient = new UploadClient({
+  publicKey: process.env.UPLOADCARE_PUBLIC_KEY || '',
+});
 
 export async function POST(request: Request) {
-  // 1. Proteger a rota - apenas usuários logados podem fazer upload
   const session = await getServerSession(authOptions);
   if (!session || !session.user) {
     return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 401 });
   }
 
-  // 2. Pegar o arquivo da requisição
   const form = await request.formData();
   const file = form.get('file') as File | null;
 
@@ -22,33 +25,32 @@ export async function POST(request: Request) {
   }
   
   try {
-    // 3. Fazer o upload do arquivo para o Vercel Blob
-    // Adicionamos um prefixo aleatório para garantir que o nome do arquivo seja único
-    const randomPrefix = randomBytes(4).toString('hex');
-    const blobFilename = `${randomPrefix}-${file.name}`;
-    
-    const blob = await put(blobFilename, file, {
-      access: 'public', // O arquivo será acessível publicamente pela sua URL
+    // 3. Converter o arquivo para um formato que o Uploadcare entende (Buffer)
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+
+    // 4. Fazer o upload para o Uploadcare
+    const uploadResult = await uploadClient.uploadFile(fileBuffer, {
+      fileName: file.name,
+      contentType: file.type,
+      // A chave secreta é usada implicitamente pelo SDK em ambiente de servidor
     });
 
-    // 4. Gerar um token único para a página de assinatura
     const signatureToken = randomBytes(20).toString('hex');
     
-    // 5. Salvar as informações do romaneio no nosso banco de dados
+    // 5. Salvar as informações no nosso banco de dados, usando a URL do Uploadcare
     const romaneio = await prisma.romaneio.create({
       data: {
         fileName: file.name,
-        storageUrl: blob.url, // A URL do arquivo salvo no Vercel Blob
+        storageUrl: uploadResult.cdnUrl, // <-- Usando a URL do Uploadcare
         signatureToken: signatureToken,
-        authorId: session.user.id, // Associa o romaneio ao usuário que fez o upload
+        authorId: session.user.id,
       },
     });
 
-    // 6. Retornar sucesso com os dados do romaneio criado
     return NextResponse.json(romaneio, { status: 201 });
 
   } catch (error) {
-    console.error("Erro no upload do romaneio:", error);
+    console.error("Erro no upload do romaneio via Uploadcare:", error);
     return NextResponse.json({ error: 'Erro interno do servidor ao processar o arquivo.' }, { status: 500 });
   }
 }
