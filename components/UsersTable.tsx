@@ -1,37 +1,28 @@
-// components/UsersTable.tsx
+// components/UsersTable.tsx - VERSÃO COMPLETA E ATUALIZADA
 'use client';
 
 import { useState } from 'react';
 import type { User } from '@prisma/client';
-import { useRouter } from 'next/navigation';
 
 export default function UsersTable({ initialUsers }: { initialUsers: User[] }) {
   const [users, setUsers] = useState(initialUsers);
   const [error, setError] = useState('');
-  const router = useRouter();
 
   const handleDelete = async (userId: string) => {
-    // Confirmação para evitar exclusões acidentais
     if (!window.confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.')) {
       return;
     }
-
     setError('');
     try {
       const response = await fetch(`/api/users/${userId}`, {
         method: 'DELETE',
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Falha ao excluir usuário');
       }
-      
-      // Sucesso! Remove o usuário da lista na tela, sem precisar recarregar a página.
       setUsers(users.filter((user) => user.id !== userId));
-
     } catch (err: any) {
-      // Mostra um alerta com o erro para o usuário
       alert(`Erro: ${err.message}`);
       setError(err.message);
     }
@@ -49,8 +40,8 @@ export default function UsersTable({ initialUsers }: { initialUsers: User[] }) {
                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Email</th>
                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Role</th>
                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Data de Criação</th>
-                <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-0">
-                  <span className="sr-only">Ações</span>
+                <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-0 text-right text-sm font-semibold text-gray-900">
+                  Ações
                 </th>
               </tr>
             </thead>
@@ -70,7 +61,10 @@ export default function UsersTable({ initialUsers }: { initialUsers: User[] }) {
                   </td>
                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{new Date(user.createdAt).toLocaleDateString('pt-BR')}</td>
                   <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
-                    <button onClick={() => handleDelete(user.id)} className="text-red-600 hover:text-red-800">
+                    <a href={`/admin/editar/${user.id}`} className="text-osirnet-light-blue hover:text-osirnet-blue">
+                      Editar
+                    </a>
+                    <button onClick={() => handleDelete(user.id)} className="ml-4 text-red-600 hover:text-red-800">
                       Excluir
                     </button>
                   </td>
