@@ -3,39 +3,52 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { Prisma } from '@prisma/client'; // <-- MUDANÇA 1: IMPORTAÇÃO ADICIONADA
+import { z } from 'zod';
 
-export async function DELETE(
+// Zod Schema para validar os dados de entrada
+const updateUserSchema = z.object({
+  name: z.string().min(1, 'O nome é obrigatório.'),
+  role: z.enum(['USER', 'ADMIN']),
+});
+
+export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
+  
+  // 1. Proteção: Apenas administradores podem atualizar usuários
   if (!session || session.user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 403 });
+    return NextResponse.json({ error: 'Não autorizado.' }, { status: 403 });
   }
 
-  const userIdToDelete = params.id;
+  const userId = params.id;
+  const json = await request.json();
 
-  if (session.user.id === userIdToDelete) {
-    return NextResponse.json({ error: 'Você não pode excluir sua própria conta de administrador.' }, { status: 400 });
+  // 2. Validação: Verifica se os dados recebidos são válidos
+  const validatedFields = updateUserSchema.safeParse(json);
+
+  if (!validatedFields.success) {
+    return NextResponse.json({ error: validatedFields.error.format() }, { status: 400 });
   }
+  
+  const { name, role } = validatedFields.data;
 
   try {
-    await prisma.user.delete({
-      where: {
-        id: userIdToDelete,
+    // 3. Atualização: Encontra o usuário e atualiza os dados
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        name,
+        role,
       },
     });
-
-    return NextResponse.json({ message: 'Usuário excluído com sucesso' }, { status: 200 });
+    
+    // 4. Resposta: Retorna o usuário atualizado com sucesso
+    return NextResponse.json(updatedUser, { status: 200 });
 
   } catch (error) {
-    console.error("Erro ao excluir usuário:", error);
-    
-    // MUDANÇA 2: USANDO O 'Prisma' IMPORTADO
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-        return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
-    }
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
+    console.error("Falha ao atualizar usuário:", error);
+    return NextResponse.json({ error: 'Falha ao atualizar usuário no banco de dados.' }, { status: 500 });
   }
 }

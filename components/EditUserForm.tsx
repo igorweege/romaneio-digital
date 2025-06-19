@@ -1,4 +1,4 @@
-// components/EditUserForm.tsx
+// components/EditUserForm.tsx - VERSÃO COMPLETA E ATUALIZADA
 'use client';
 
 import { useState } from 'react';
@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 
 export default function EditUserForm({ user }: { user: User }) {
   const router = useRouter();
-  // Inicializa o estado do formulário com os dados do usuário que recebemos
   const [name, setName] = useState(user.name);
   const [role, setRole] = useState(user.role);
   
@@ -16,9 +15,36 @@ export default function EditUserForm({ user }: { user: User }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // A lógica para salvar as alterações na API virá no próximo passo
-    console.log({ name, role });
-    alert('Interface do formulário funcionando! A lógica para salvar virá a seguir.');
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`/api/users/${user.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: name,
+          role: role,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Falha ao atualizar o usuário.');
+      }
+
+      // Sucesso!
+      alert('Usuário atualizado com sucesso!');
+      router.push('/admin');
+      router.refresh(); // Opcional: Força a atualização dos dados na página admin
+
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -48,11 +74,11 @@ export default function EditUserForm({ user }: { user: User }) {
           </select>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-center font-medium text-red-600 mt-4">{error}</p>}
 
       <div className="flex items-center justify-end gap-x-4 border-t pt-6 mt-4">
-        <button type="button" onClick={() => router.push('/admin')} className="text-sm font-semibold leading-6 text-gray-900">Cancelar</button>
-        <button type="submit" disabled={isLoading} className="rounded-md bg-osirnet-blue px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90 disabled:bg-blue-300">
+        <button type="button" onClick={() => router.push('/admin')} disabled={isLoading} className="text-sm font-semibold leading-6 text-gray-900">Cancelar</button>
+        <button type="submit" disabled={isLoading} className="rounded-md bg-osirnet-blue px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90 disabled:bg-gray-400">
           {isLoading ? 'Salvando...' : 'Salvar Alterações'}
         </button>
       </div>
