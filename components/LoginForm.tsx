@@ -1,11 +1,11 @@
-// components/LoginForm.tsx - VERSÃO COM LOGO
+// components/LoginForm.tsx - Logo Corrigido
 
 'use client';
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import Image from 'next/image'; // 1. IMPORTAMOS O COMPONENTE IMAGE
+import Image from 'next/image';
 
 export default function LoginForm() {
   const router = useRouter();
@@ -57,13 +57,12 @@ export default function LoginForm() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
         <div className="text-center">
-          {/* 2. ADICIONAMOS O LOGO AQUI */}
           <Image
             className="mx-auto h-12 w-auto"
-            src="/logo.png" // Certifique-se que este é o caminho/nome correto do seu logo na pasta 'public'
-            alt="Logo da Empresa"
-            width={200} // Ajuste a largura conforme necessário
-            height={50}  // Ajuste a altura conforme necessário
+            src="/logo-osirnet.png" // <-- CORRIGIDO AQUI
+            alt="Logo Osirnet"
+            width={200}
+            height={50}
           />
           <h1 className="mt-6 text-3xl font-bold text-gray-800">Login</h1>
           <p className="mt-2 text-sm text-gray-600">Acesse sua conta para continuar</p>

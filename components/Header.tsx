@@ -1,14 +1,16 @@
-// components/Header.tsx
+// components/Header.tsx - Logo Corrigido
 
 'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
 
 export default function Header() {
   const { data: session } = useSession();
   const user = session?.user;
+  const pathname = usePathname();
 
   return (
     <header className="bg-white shadow-sm">
@@ -19,25 +21,33 @@ export default function Header() {
               <Link href="/dashboard">
                 <Image
                   className="h-8 w-auto"
-                  src="/logo.png"
-                  alt="Logo da Empresa"
+                  src="/logo-osirnet.png" // <-- CORRIGIDO AQUI
+                  alt="Logo Osirnet"
                   width={140}
                   height={32}
+                  priority
                 />
               </Link>
             </div>
             <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
               <Link
                 href="/dashboard"
-                className="inline-flex items-center border-b-2 border-osirnet-blue px-1 pt-1 text-sm font-medium text-gray-900"
+                className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
+                  pathname === '/dashboard'
+                    ? 'border-osirnet-blue text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                }`}
               >
                 Dashboard
               </Link>
-              {/* Mostra o link de Admin apenas para usuários com a role ADMIN */}
               {user?.role === 'ADMIN' && (
                 <Link
                   href="/admin"
-                  className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                  className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
+                    pathname.startsWith('/admin')
+                      ? 'border-osirnet-blue text-gray-900'
+                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  }`}
                 >
                   Admin
                 </Link>

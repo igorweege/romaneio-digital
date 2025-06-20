@@ -1,12 +1,12 @@
-// app/layout.tsx - VERSÃO COM IMPORTAÇÃO CORRIGIDA
+// app/layout.tsx - Conteúdo do Passo 61
 
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth"; // AQUI A CORREÇÃO
+import { authOptions } from "@/lib/auth"; // Verifique se o caminho está com '@/'
 import AuthProvider from "@/components/AuthProvider";
-import Header from "@/components/Header";
+import Header from "@/components/Header"; // Importamos nosso Header
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,12 +20,14 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Pegamos a sessão no servidor para decidir se mostramos o Header
   const session = await getServerSession(authOptions);
 
   return (
     <html lang="pt-BR">
       <body className={inter.className}>
         <AuthProvider>
+          {/* Se houver sessão (usuário logado), mostra o Header */}
           {session && <Header />}
           <main>{children}</main>
         </AuthProvider>
