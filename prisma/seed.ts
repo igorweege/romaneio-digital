@@ -1,5 +1,6 @@
 // prisma/seed.ts
-import { PrismaClient } from '@prisma/client';
+
+import { PrismaClient, Role } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -7,33 +8,27 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Start seeding ...');
 
-  const password = '123456';
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const emailAdmin = 'igor@osirnet.com.br';
+  
+  // Apaga o usuário se ele já existir, para podermos rodar o script várias vezes
+  // Isso evita erros caso o usuário já tenha sido criado.
+  await prisma.user.delete({ where: { email: emailAdmin } }).catch(() => {
+    console.log('Admin user not found, creating a new one...');
+  });
 
-  const adminUser = await prisma.user.upsert({
-    where: { email: 'igor.weege@osirnet.com.br' },
-    update: {},
-    create: {
+  const hashedPassword = await bcrypt.hash('Mudar1234', 10);
+
+  const admin = await prisma.user.create({
+    data: {
       name: 'Igor Weege',
-      email: 'igor.weege@osirnet.com.br',
+      email: emailAdmin,
       password: hashedPassword,
-      role: 'ADMIN',
+      role: Role.ADMIN,
     },
   });
 
-  const commonUser = await prisma.user.upsert({
-    where: { email: 'luiza.brum@osirnet.com.br' },
-    update: {},
-    create: {
-      name: 'Luiza Brum',
-      email: 'luiza.brum@osirnet.com.br',
-      password: hashedPassword,
-      role: 'USER',
-    },
-  });
-
+  console.log(`Created admin user: ${admin.name} (ID: ${admin.id})`);
   console.log('Seeding finished.');
-  console.log({ adminUser, commonUser });
 }
 
 main()

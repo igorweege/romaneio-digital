@@ -1,10 +1,16 @@
-// components/UsersTable.tsx - VERSÃO COMPLETA E ATUALIZADA
+// components/UsersTable.tsx - VERSÃO CORRIGIDA
+
 'use client';
 
 import { useState } from 'react';
-import type { User } from '@prisma/client';
+import type { User as PrismaUser, Role } from '@prisma/client'; // Importa o tipo original
 
-export default function UsersTable({ initialUsers }: { initialUsers: User[] }) {
+// Cria um novo tipo onde 'createdAt' é uma string
+type SerializableUser = Omit<PrismaUser, 'createdAt'> & {
+  createdAt: string;
+};
+
+export default function UsersTable({ initialUsers }: { initialUsers: SerializableUser[] }) {
   const [users, setUsers] = useState(initialUsers);
   const [error, setError] = useState('');
 
