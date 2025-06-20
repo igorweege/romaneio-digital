@@ -1,10 +1,11 @@
-// components/LoginForm.tsx - VERSÃO CORRIGIDA E COMPLETA
+// components/LoginForm.tsx - VERSÃO COM LOGO
 
 'use client';
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Image from 'next/image'; // 1. IMPORTAMOS O COMPONENTE IMAGE
 
 export default function LoginForm() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function LoginForm() {
 
     try {
       const result = await signIn('credentials', {
-        redirect: false, // Importante: não redireciona automaticamente
+        redirect: false,
         email,
         password,
         callbackUrl,
@@ -34,7 +35,6 @@ export default function LoginForm() {
         setLocalError('Email ou senha inválidos. Tente novamente.');
         setIsLoading(false);
       } else {
-        // Redirecionamento manual em caso de sucesso
         router.push(callbackUrl);
       }
     } catch (error) {
@@ -57,7 +57,15 @@ export default function LoginForm() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-800">Login</h1>
+          {/* 2. ADICIONAMOS O LOGO AQUI */}
+          <Image
+            className="mx-auto h-12 w-auto"
+            src="/logo.png" // Certifique-se que este é o caminho/nome correto do seu logo na pasta 'public'
+            alt="Logo da Empresa"
+            width={200} // Ajuste a largura conforme necessário
+            height={50}  // Ajuste a altura conforme necessário
+          />
+          <h1 className="mt-6 text-3xl font-bold text-gray-800">Login</h1>
           <p className="mt-2 text-sm text-gray-600">Acesse sua conta para continuar</p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
