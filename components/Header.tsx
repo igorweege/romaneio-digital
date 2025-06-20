@@ -1,4 +1,4 @@
-// components/Header.tsx - Logo Corrigido
+// components/Header.tsx - VERSÃO COM LINK "ROMANEIOS"
 
 'use client';
 
@@ -8,9 +8,17 @@ import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 
 export default function Header() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const user = session?.user;
   const pathname = usePathname();
+
+  if (status === 'loading') {
+    return <header className="h-16 bg-white shadow-sm" />;
+  }
+
+  if (!session) {
+    return null;
+  }
 
   return (
     <header className="bg-white shadow-sm">
@@ -21,7 +29,7 @@ export default function Header() {
               <Link href="/dashboard">
                 <Image
                   className="h-8 w-auto"
-                  src="/logo-osirnet.png" // <-- CORRIGIDO AQUI
+                  src="/logo-osirnet.png"
                   alt="Logo Osirnet"
                   width={140}
                   height={32}
@@ -39,6 +47,17 @@ export default function Header() {
                 }`}
               >
                 Dashboard
+              </Link>
+              {/* NOVO LINK DE ROMANEIOS, VISÍVEL PARA TODOS */}
+              <Link
+                href="/romaneios"
+                className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
+                  pathname.startsWith('/romaneios')
+                    ? 'border-osirnet-blue text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                }`}
+              >
+                Romaneios
               </Link>
               {user?.role === 'ADMIN' && (
                 <Link
