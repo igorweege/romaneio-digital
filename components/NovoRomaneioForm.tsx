@@ -1,4 +1,4 @@
-// components/NovoRomaneioForm.tsx - VERSÃO COMPLETA E CORRIGIDA
+// components/NovoRomaneioForm.tsx - VERSÃO FINAL E FUNCIONAL
 
 'use client';
 
@@ -24,16 +24,45 @@ export default function NovoRomaneioForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
 
-    if (!nomeCompleto || !file) {
-      setError('Os campos PDF e Nome Completo são obrigatórios.');
-      setIsLoading(false);
+    if (!file || !nomeCompleto) {
+      setError('O arquivo PDF e o Nome Completo são obrigatórios.');
       return;
     }
     
-    alert('Interface com todos os campos pronta! A lógica de upload virá a seguir.');
-    setIsLoading(false);
+    setIsLoading(true);
+
+    try {
+      // 1. Cria um objeto FormData, que é o formato para enviar arquivos
+      const formData = new FormData();
+
+      // 2. Adiciona todos os nossos dados a ele
+      formData.append('file', file);
+      formData.append('nomeCompleto', nomeCompleto);
+      formData.append('cpf', cpf);
+      formData.append('emailSolicitante', emailSolicitante);
+
+      // 3. Envia o FormData para a nossa API
+      const response = await fetch('/api/romaneios', {
+        method: 'POST',
+        body: formData, // O corpo da requisição agora é o FormData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Falha ao criar o romaneio.');
+      }
+
+      alert('Romaneio criado e arquivo enviado com sucesso!');
+      
+      router.push('/dashboard'); 
+      router.refresh();
+
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -48,7 +77,7 @@ export default function NovoRomaneioForm() {
             id="file"
             name="file"
             type="file"
-            accept="application/pdf" // Aceita apenas PDFs
+            accept="application/pdf"
             onChange={handleFileChange}
             required
             className="relative block w-full min-w-0 flex-auto rounded-md border border-solid border-gray-300 bg-clip-padding px-3 py-[0.32rem] text-base font-normal text-gray-700 transition duration-300 ease-in-out file:-mx-3 file:-my-[0.32rem] file:overflow-hidden file:rounded-none file:border-0 file:border-solid file:border-inherit file:bg-gray-100 file:px-3 file:py-[0.32rem] file:text-gray-700 file:transition file:duration-150 file:ease-in-out file:[border-inline-end-width:1px] file:[margin-inline-end:0.75rem] hover:file:bg-gray-200 focus:border-primary focus:text-gray-700 focus:shadow-te-primary focus:outline-none"
