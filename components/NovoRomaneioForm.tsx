@@ -1,4 +1,4 @@
-// components/NovoRomaneioForm.tsx
+// components/NovoRomaneioForm.tsx - VERSÃO COM REDIRECIONAMENTO CORRIGIDO
 
 'use client';
 
@@ -42,8 +42,10 @@ export default function NovoRomaneioForm() {
       }
 
       alert('Romaneio criado com sucesso!');
-      // No futuro, podemos redirecionar para a lista de romaneios
-      router.push('/admin'); 
+      
+      // AQUI A CORREÇÃO: Redireciona para o dashboard
+      router.push('/dashboard'); 
+      router.refresh(); // Força a atualização dos dados no dashboard
 
     } catch (err: any) {
       setError(err.message);
@@ -106,7 +108,7 @@ export default function NovoRomaneioForm() {
       {error && <p className="text-sm text-red-600 text-center">{error}</p>}
 
       <div className="flex items-center justify-end gap-x-4 border-t pt-6 mt-4">
-        <button type="button" onClick={() => router.push('/admin')} disabled={isLoading} className="text-sm font-semibold leading-6 text-gray-900">
+        <button type="button" onClick={() => router.push('/dashboard')} disabled={isLoading} className="text-sm font-semibold leading-6 text-gray-900">
           Cancelar
         </button>
         <button type="submit" disabled={isLoading} className="rounded-md bg-osirnet-blue px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90 disabled:bg-gray-400">
