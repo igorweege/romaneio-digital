@@ -1,25 +1,36 @@
-// app/layout.tsx
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import './globals.css';
-import AuthProvider from '@/components/AuthProvider';
+// app/layout.tsx - VERSÃO ATUALIZADA
 
-const inter = Inter({ subsets: ['latin'] });
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { getServerSession } from "next-auth";
+import { authOptions } from "./lib/auth";
+import AuthProvider from "@/components/AuthProvider";
+import Header from "@/components/Header"; // Importamos nosso novo Header
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Romaneios Digitais - Osirnet',
-  description: 'Sistema de gestão de romaneios digitais',
+  title: "Romaneio Digital",
+  description: "Gerenciamento de romaneios digitais",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Pegamos a sessão no servidor para decidir se mostramos o Header
+  const session = await getServerSession(authOptions);
+
   return (
-    <html lang="pt-br">
+    <html lang="pt-BR">
       <body className={inter.className}>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {/* Se houver sessão (usuário logado), mostra o Header */}
+          {session && <Header />}
+          <main>{children}</main>
+        </AuthProvider>
       </body>
     </html>
   );
