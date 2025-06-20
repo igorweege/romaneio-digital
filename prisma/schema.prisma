@@ -1,4 +1,5 @@
-// prisma/schema.prisma
+// VERSÃO CORRETA E COMPLETA
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,28 +10,29 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   name      String
-  email     String   @unique
+  email     String     @unique
   password  String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
+  role      Role       @default(USER)
+  createdAt DateTime   @default(now())
+  
+  // Relação: Um usuário pode ter vários romaneios
   romaneios Romaneio[]
 }
 
 model Romaneio {
-  id             String    @id @default(cuid())
-  fileName       String
-  storageUrl     String
-  signedUrl      String?
-  signatureToken String    @unique
-  isSigned       Boolean   @default(false)
-  signerName     String?
-  signerIp       String?
-  signedAt       DateTime?
-  createdAt      DateTime  @default(now())
-  author         User      @relation(fields: [authorId], references: [id])
-  authorId       String
+  id               String    @id @default(cuid())
+  nomeCompleto     String
+  cpf              String?
+  emailSolicitante String?
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  // Relação: Um romaneio pertence a um único usuário (autor)
+  author           User      @relation(fields: [authorId], references: [id])
+  authorId         String
 }
 
 enum Role {
