@@ -1,4 +1,4 @@
-// app/dashboard/page.tsx - VERSÃO CORRIGIDA E ATUALIZADA
+// app/dashboard/page.tsx - VERSÃO COM LINK PARA O PDF
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -13,7 +13,6 @@ export default async function Dashboard() {
     redirect('/login');
   }
 
-  // Busca os últimos 10 romaneios criados pelo usuário logado
   const romaneios = await prisma.romaneio.findMany({
     where: {
       authorId: session.user.id,
@@ -43,7 +42,6 @@ export default async function Dashboard() {
         </div>
       </div>
 
-      {/* Tabela de Romaneios Recentes */}
       <div className="mt-6 flow-root">
         <h2 className="text-xl font-semibold text-gray-700">Romaneios Recentes</h2>
         <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8 mt-4">
@@ -60,6 +58,10 @@ export default async function Dashboard() {
                   <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                     Data de Criação
                   </th>
+                  {/* NOVA COLUNA */}
+                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                    Ações
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -75,11 +77,24 @@ export default async function Dashboard() {
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {new Date(romaneio.createdAt).toLocaleDateString('pt-BR')}
                       </td>
+                      {/* NOVA CÉLULA COM O LINK */}
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        {romaneio.fileUrl && (
+                          <a
+                            href={romaneio.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-osirnet-light-blue hover:text-osirnet-blue hover:underline"
+                          >
+                            Visualizar PDF
+                          </a>
+                        )}
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={3} className="text-center py-4 text-sm text-gray-500">
+                    <td colSpan={4} className="text-center py-4 text-sm text-gray-500">
                       Nenhum romaneio encontrado.
                     </td>
                   </tr>
