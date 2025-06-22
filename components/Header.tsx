@@ -1,4 +1,4 @@
-// components/Header.tsx - VERSÃO DE DIAGNÓSTICO
+// components/Header.tsx - VERSÃO FINAL COM ESQUELETO DE LOADING
 
 'use client';
 
@@ -9,23 +9,36 @@ import { usePathname } from 'next/navigation';
 
 export default function Header() {
   const { data: session, status } = useSession();
-  
-  // NOSSO ESPIÃO DE DEBUG:
-  console.log('Header Status:', status, 'Session Data:', session);
-
   const user = session?.user;
   const pathname = usePathname();
 
-  // Enquanto a sessão estiver carregando, mostramos um header vazio para não "pular" na tela
+  // Se a sessão estiver carregando, mostramos um "esqueleto" para evitar o pisca-pisca.
   if (status === 'loading') {
-    return <header className="h-16 bg-white shadow-sm" />;
+    return (
+      <header className="bg-white shadow-sm">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 justify-between items-center animate-pulse">
+            <div className="flex items-center gap-x-8">
+              <div className="h-8 w-32 bg-gray-200 rounded"></div>
+              <div className="h-4 w-20 bg-gray-200 rounded"></div>
+              <div className="h-4 w-20 bg-gray-200 rounded"></div>
+            </div>
+            <div className="flex items-center gap-x-4">
+              <div className="h-4 w-24 bg-gray-200 rounded"></div>
+              <div className="h-9 w-14 bg-gray-200 rounded-md"></div>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
   }
-  
-  // Se não houver sessão (ex: durante o logout), não mostra nada
+
+  // Se não houver sessão, não retorna nada.
   if (!session) {
     return null;
   }
 
+  // Se a sessão estiver carregada, mostra o header completo.
   return (
     <header className="bg-white shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
