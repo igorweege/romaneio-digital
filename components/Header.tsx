@@ -1,4 +1,4 @@
-// components/Header.tsx - VERSÃO COM LINK "ROMANEIOS"
+// components/Header.tsx - VERSÃO DE DIAGNÓSTICO
 
 'use client';
 
@@ -9,13 +9,19 @@ import { usePathname } from 'next/navigation';
 
 export default function Header() {
   const { data: session, status } = useSession();
+  
+  // NOSSO ESPIÃO DE DEBUG:
+  console.log('Header Status:', status, 'Session Data:', session);
+
   const user = session?.user;
   const pathname = usePathname();
 
+  // Enquanto a sessão estiver carregando, mostramos um header vazio para não "pular" na tela
   if (status === 'loading') {
     return <header className="h-16 bg-white shadow-sm" />;
   }
-
+  
+  // Se não houver sessão (ex: durante o logout), não mostra nada
   if (!session) {
     return null;
   }
@@ -48,7 +54,6 @@ export default function Header() {
               >
                 Dashboard
               </Link>
-              {/* NOVO LINK DE ROMANEIOS, VISÍVEL PARA TODOS */}
               <Link
                 href="/romaneios"
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
