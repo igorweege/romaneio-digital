@@ -1,4 +1,4 @@
-// prisma/schema.prisma - VERSÃO COMPLETA E ATUALIZADA
+// prisma/schema.prisma - VERSÃO FINAL E CORRETA
 
 generator client {
   provider = "prisma-client-js"
@@ -21,23 +21,24 @@ model User {
 }
 
 model Romaneio {
-  id               String    @id @default(cuid())
-  nomeCompleto     String
-  cpf              String?
-  emailSolicitante String?
-  fileName         String?
-  fileUrl          String?
+  id                String    @id @default(cuid())
+  nomeCompleto      String
+  cpf               String?
+  emailSolicitante  String?
+  fileName          String?
+  fileUrl           String?
+  isSigned          Boolean   @default(false)
+  signedAt          DateTime?
+  signatureToken    String    @unique @default(cuid())
+  
+  // O CAMPO QUE FALTAVA ESTÁ AQUI
+  signatureImageUrl String?
 
-  // NOVOS CAMPOS PARA ASSINATURA
-  isSigned         Boolean   @default(false) // Para saber se já foi assinado
-  signedAt         DateTime?                 // Para guardar a data da assinatura
-  signatureToken   String    @unique @default(cuid()) // Token secreto para o link
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-
-  author           User      @relation(fields: [authorId], references: [id])
-  authorId         String
+  author            User      @relation(fields: [authorId], references: [id])
+  authorId          String
 }
 
 enum Role {

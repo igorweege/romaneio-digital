@@ -1,34 +1,56 @@
-// components/SignatureForm.tsx
+// components/SignatureForm.tsx - VERSÃO FINAL E FUNCIONAL
 
 'use client';
 
 import { useRef, useState } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
+import { useRouter } from 'next/navigation'; // Importamos o router para o redirect
 
-// Este componente recebe o ID do romaneio para sabermos qual atualizar no futuro
 export default function SignatureForm({ romaneioId }: { romaneioId: string }) {
+  const router = useRouter(); // Inicializamos o router
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const sigPad = useRef<SignatureCanvas>(null);
 
   const handleClear = () => {
     sigPad.current?.clear();
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (sigPad.current?.isEmpty()) {
       alert("Por favor, forneça uma assinatura.");
       return;
     }
 
     setIsLoading(true);
-    // Pega a assinatura como uma imagem no formato PNG (codificada em base64)
-    const signatureImage = sigPad.current?.toDataURL('image/png');
+    setError('');
     
-    // NO PRÓXIMO PASSO, ENVIAREMOS ESTA IMAGEM PARA UMA NOVA API
-    console.log("ID do Romaneio:", romaneioId);
-    console.log("Imagem da Assinatura (Data URL):", signatureImage);
-    alert("Assinatura capturada! O próximo passo é salvá-la.");
-    setIsLoading(false);
+    try {
+      const signatureImage = sigPad.current?.toDataURL('image/png');
+
+      // 1. Enviamos os dados para a nossa nova API
+      const response = await fetch('/api/sign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          romaneioId,
+          signatureImage,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Falha ao salvar a assinatura.');
+      }
+
+      // 2. Em caso de sucesso, redireciona para a página de sucesso
+      router.push('/sucesso');
+
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -46,11 +68,15 @@ export default function SignatureForm({ romaneioId }: { romaneioId: string }) {
           }}
         />
       </div>
+
+      {error && <p className="text-sm text-red-600 text-center mt-4">{error}</p>}
+
       <div className="mt-4 flex justify-end gap-x-4">
         <button
           type="button"
           onClick={handleClear}
           className="text-sm font-semibold leading-6 text-gray-900"
+          disabled={isLoading}
         >
           Limpar
         </button>
