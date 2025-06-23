@@ -1,10 +1,11 @@
-// app/dashboard/page.tsx - VERSÃO COM LINK CORRIGIDO
+// app/dashboard/page.tsx - VERSÃO COM BOTÃO DE COPIAR LINK
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
+import CopyLinkButton from '@/components/CopyLinkButton'; // 1. Importamos o botão
 
 export default async function Dashboard() {
   const session = await getServerSession(authOptions);
@@ -22,6 +23,9 @@ export default async function Dashboard() {
     },
     take: 10,
   });
+  
+  // 2. Pegamos a URL base do ambiente
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
   return (
     <div className="p-4 sm:p-8">
@@ -33,7 +37,6 @@ export default async function Dashboard() {
           </p>
         </div>
         <div>
-          {/* LINK CORRIGIDO AQUI */}
           <Link
             href="/romaneios/novo"
             className="rounded-md bg-osirnet-blue px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90"
@@ -54,9 +57,6 @@ export default async function Dashboard() {
                     Nome do Solicitante
                   </th>
                   <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                    Email para Contato
-                  </th>
-                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                     Data de Criação
                   </th>
                   <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
@@ -72,9 +72,6 @@ export default async function Dashboard() {
                         {romaneio.nomeCompleto}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {romaneio.emailSolicitante || 'N/A'}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {new Date(romaneio.createdAt).toLocaleDateString('pt-BR')}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
@@ -88,12 +85,16 @@ export default async function Dashboard() {
                             Visualizar PDF
                           </a>
                         )}
+                        {/* 3. Usamos o botão aqui, construindo o link completo */}
+                        <CopyLinkButton 
+                          link={`${baseUrl}/assinar/${romaneio.signatureToken}`}
+                        />
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="text-center py-4 text-sm text-gray-500">
+                    <td colSpan={3} className="text-center py-4 text-sm text-gray-500">
                       Nenhum romaneio encontrado.
                     </td>
                   </tr>

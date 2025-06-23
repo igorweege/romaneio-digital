@@ -17,7 +17,6 @@ model User {
   role      Role       @default(USER)
   createdAt DateTime   @default(now())
   
-  // Relação: Um usuário pode ter vários romaneios
   romaneios Romaneio[]
 }
 
@@ -26,15 +25,17 @@ model Romaneio {
   nomeCompleto     String
   cpf              String?
   emailSolicitante String?
-
-  // NOVOS CAMPOS PARA O ARQUIVO
   fileName         String?
   fileUrl          String?
+
+  // NOVOS CAMPOS PARA ASSINATURA
+  isSigned         Boolean   @default(false) // Para saber se já foi assinado
+  signedAt         DateTime?                 // Para guardar a data da assinatura
+  signatureToken   String    @unique @default(cuid()) // Token secreto para o link
 
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  // Relação: Um romaneio pertence a um único usuário (autor)
   author           User      @relation(fields: [authorId], references: [id])
   authorId         String
 }
