@@ -1,27 +1,61 @@
-// app/romaneios/page.tsx
+// app/romaneios/page.tsx - VERSÃO COM FILTROS
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
+import RomaneiosTable from '@/components/RomaneiosTable';
+import FilterControls from '@/components/FilterControls'; // 1. Importamos os filtros
 
-export default async function RomaneiosPage() {
+interface RomaneiosPageProps {
+  searchParams: {
+    search?: string;
+    startDate?: string;
+    endDate?: string;
+  };
+}
+
+export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
     redirect('/login');
   }
 
-  // Por enquanto, busca todos os romaneios do usuário logado
+  const whereClause: any = {
+    authorId: session.user.id,
+  };
+
+  if (searchParams.search) {
+    whereClause.nomeCompleto = {
+      contains: searchParams.search,
+      mode: 'insensitive',
+    };
+  }
+  
+  if (searchParams.startDate) {
+    whereClause.createdAt = {
+      ...whereClause.createdAt,
+      gte: new Date(searchParams.startDate),
+    };
+  }
+
+  if (searchParams.endDate) {
+    whereClause.createdAt = {
+      ...whereClause.createdAt,
+      lte: new Date(new Date(searchParams.endDate).setHours(23, 59, 59, 999)),
+    };
+  }
+
   const romaneios = await prisma.romaneio.findMany({
-    where: {
-      authorId: session.user.id,
-    },
+    where: whereClause,
     orderBy: {
       createdAt: 'desc',
     },
   });
+  
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
   return (
     <div className="p-4 sm:p-8">
@@ -34,67 +68,19 @@ export default async function RomaneiosPage() {
         </div>
         <div>
           <Link
-            href="/romaneios/novo" // Link já corrigido para o novo caminho
+            href="/romaneios/novo"
             className="rounded-md bg-osirnet-blue px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90"
           >
             Adicionar Novo Romaneio
           </Link>
         </div>
       </div>
+      
+      {/* 2. Adicionamos o formulário de filtro aqui */}
+      <FilterControls />
 
-      <div className="mt-6 flow-root">
-        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8 mt-4">
-          <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-            <table className="min-w-full divide-y divide-gray-300">
-              <thead>
-                <tr>
-                  <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
-                    Nome do Solicitante
-                  </th>
-                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                    Data de Criação
-                  </th>
-                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {romaneios.length > 0 ? (
-                  romaneios.map((romaneio) => (
-                    <tr key={romaneio.id}>
-                      <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
-                        {romaneio.nomeCompleto}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {new Date(romaneio.createdAt).toLocaleDateString('pt-BR')}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {romaneio.fileUrl && (
-                          <a
-                            href={romaneio.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-osirnet-light-blue hover:text-osirnet-blue hover:underline"
-                          >
-                            Visualizar PDF
-                          </a>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={3} className="text-center py-4 text-sm text-gray-500">
-                      Nenhum romaneio encontrado.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      <RomaneiosTable romaneios={romaneios} baseUrl={baseUrl} />
+
     </div>
   );
 }
