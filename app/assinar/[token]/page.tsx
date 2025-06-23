@@ -1,8 +1,9 @@
-// app/assinar/[token]/page.tsx - VERSÃO ATUALIZADA
+// app/assinar/[token]/page.tsx - VERSÃO COM NOVO VISUALIZADOR
 
 import prisma from '@/lib/prisma';
 import { notFound } from 'next/navigation';
-import SignatureForm from '@/components/SignatureForm'; // 1. Importamos o formulário
+import SignatureForm from '@/components/SignatureForm';
+import PdfViewer from '@/components/PdfViewer'; // Importamos nosso novo componente
 
 interface SignaturePageProps {
   params: {
@@ -49,21 +50,17 @@ export default async function SignaturePage({ params }: SignaturePageProps) {
             Documento referente a: <strong>{romaneio.nomeCompleto}</strong>
           </p>
           
-          <div className="mt-6 border rounded-md overflow-hidden">
+          {/* Visualizador de PDF */}
+          <div className="mt-6">
             {romaneio.fileUrl ? (
-              <iframe
-                src={romaneio.fileUrl}
-                className="w-full h-[80vh]"
-                title={`Romaneio de ${romaneio.nomeCompleto}`}
-              />
+              // TROCAMOS o <iframe> pelo nosso novo componente
+              <PdfViewer fileUrl={romaneio.fileUrl} />
             ) : (
               <p className="p-4 text-center text-red-600">Arquivo PDF não encontrado.</p>
             )}
           </div>
 
-          {/* 2. Usamos nosso componente interativo aqui, passando o ID do romaneio */}
           <SignatureForm romaneioId={romaneio.id} />
-
         </div>
       </div>
     </div>
