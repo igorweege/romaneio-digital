@@ -1,4 +1,4 @@
-// app/romaneios/page.tsx - VERSÃO COM BUSCA GERAL
+// app/romaneios/page.tsx - VERSÃO COM DADOS SIMPLIFICADOS
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -23,9 +23,11 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
     redirect('/login');
   }
 
-  // AQUI A MUDANÇA: A cláusula 'where' não filtra mais por autor.
-  // Ela está pronta para receber apenas os filtros de pesquisa.
   const whereClause: any = {};
+
+  if (session.user.role !== 'ADMIN') {
+    whereClause.authorId = session.user.id;
+  }
 
   if (searchParams.search) {
     whereClause.nomeCompleto = {
@@ -48,12 +50,11 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
     };
   }
 
-  const romaneios = await prisma.romaneio.findMany({
+  const romaneiosFromDb = await prisma.romaneio.findMany({
     where: whereClause,
     orderBy: {
       createdAt: 'desc',
     },
-    // Incluímos os dados do autor para poder exibir o nome na tabela
     include: {
         author: {
             select: {
@@ -62,6 +63,14 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
         },
     },
   });
+
+  // Mapeamos os dados para um formato simples
+  const romaneios = romaneiosFromDb.map(romaneio => ({
+    ...romaneio,
+    createdAt: romaneio.createdAt.toISOString(),
+    signedAt: romaneio.signedAt ? romaneio.signedAt.toISOString() : null, // Importante para o 'signedAt'
+    authorName: romaneio.author?.name || 'Desconhecido',
+  }));
   
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
@@ -86,10 +95,7 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
       
       <FilterControls />
 
-      <RomaneiosTable 
-        romaneios={romaneios as any} 
-        baseUrl={baseUrl} 
-      />
+      <RomaneiosTable romaneios={romaneios as any} baseUrl={baseUrl} />
 
     </div>
   );

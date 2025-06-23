@@ -1,11 +1,11 @@
-// app/dashboard/page.tsx - VERSÃO SIMPLIFICADA
+// app/dashboard/page.tsx - VERSÃO COM DADOS SIMPLIFICADOS
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
-import RomaneiosTable from '@/components/RomaneiosTable'; // Importamos nossa nova tabela
+import RomaneiosTable from '@/components/RomaneiosTable';
 
 export default async function Dashboard() {
   const session = await getServerSession(authOptions);
@@ -14,16 +14,32 @@ export default async function Dashboard() {
     redirect('/login');
   }
 
-  // A página continua buscando os dados no servidor
-  const romaneios = await prisma.romaneio.findMany({
+  // 1. Busca os dados incluindo o nome do autor
+  const romaneiosFromDb = await prisma.romaneio.findMany({
     where: {
       authorId: session.user.id,
     },
     orderBy: {
       createdAt: 'desc',
     },
+    include: {
+        author: {
+            select: {
+                name: true,
+            },
+        },
+    },
     take: 10,
   });
+
+  // 2. AQUI A MUDANÇA: Mapeamos os dados para um formato simples
+  const romaneios = romaneiosFromDb.map(romaneio => ({
+    ...romaneio,
+    // Garantimos que 'createdAt' seja uma string, que é um tipo simples
+    createdAt: romaneio.createdAt.toISOString(), 
+    // Se o autor não existir, garantimos um valor padrão
+    authorName: romaneio.author?.name || 'Desconhecido',
+  }));
   
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
@@ -46,8 +62,6 @@ export default async function Dashboard() {
         </div>
       </div>
       
-      {/* A página agora só precisa renderizar o componente da tabela,
-          passando os dados que ela buscou. */}
       <RomaneiosTable romaneios={romaneios} baseUrl={baseUrl} />
 
     </div>

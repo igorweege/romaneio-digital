@@ -1,27 +1,31 @@
-// components/RomaneiosTable.tsx - VERSÃO COM CORREÇÃO FINAL DE TIPAGEM
+// components/RomaneiosTable.tsx - VERSÃO COM TIPOS SIMPLIFICADOS
 
 'use client';
 
 import { useState } from 'react';
-import { Prisma } from '@prisma/client'; // Importamos o Prisma para usar seus tipos
 import CopyLinkButton from '@/components/CopyLinkButton';
 import Modal from '@/components/Modal';
 import QRCode from 'qrcode.react';
 
-// AQUI A CORREÇÃO: Usamos o Prisma para gerar um tipo perfeito e automático
-const romaneioWithAuthor = Prisma.validator<Prisma.RomaneioDefaultArgs>()({
-  include: { author: { select: { name: true } } },
-});
-type RomaneioWithAuthor = Prisma.RomaneioGetPayload<typeof romaneioWithAuthor>;
-
+// 1. Definimos um tipo simples para o romaneio que esperamos receber
+interface SimpleRomaneio {
+  id: string;
+  nomeCompleto: string;
+  isSigned: boolean;
+  createdAt: string; // Esperamos uma string aqui
+  fileUrl: string | null;
+  signatureToken: string;
+  authorName: string; // Esperamos o nome do autor como uma string
+  signedAt: Date | null;
+}
 
 interface RomaneiosTableProps {
-  romaneios: RomaneioWithAuthor[];
+  romaneios: SimpleRomaneio[];
   baseUrl: string;
 }
 
 export default function RomaneiosTable({ romaneios, baseUrl }: RomaneiosTableProps) {
-  const [selectedRomaneio, setSelectedRomaneio] = useState<RomaneioWithAuthor | null>(null);
+  const [selectedRomaneio, setSelectedRomaneio] = useState<SimpleRomaneio | null>(null);
 
   const getSignatureLink = (token: string) => `${baseUrl}/assinar/${token}`;
 
@@ -51,7 +55,7 @@ export default function RomaneiosTable({ romaneios, baseUrl }: RomaneiosTablePro
       </Modal>
 
       <div className="mt-6 flow-root">
-        <h2 className="text-xl font-semibold text-gray-700">Listagem de Romaneios</h2>
+        <h2 className="text-xl font-semibold text-gray-700">Romaneios Recentes</h2>
         <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8 mt-4">
           <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
             <table className="min-w-full divide-y divide-gray-300">
@@ -81,8 +85,9 @@ export default function RomaneiosTable({ romaneios, baseUrl }: RomaneiosTablePro
                       <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
                         {romaneio.nomeCompleto}
                       </td>
+                      {/* 2. Usamos o novo campo 'authorName' */}
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {romaneio.author?.name || 'N/A'}
+                        {romaneio.authorName}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {new Date(romaneio.createdAt).toLocaleDateString('pt-BR')}
@@ -112,6 +117,11 @@ export default function RomaneiosTable({ romaneios, baseUrl }: RomaneiosTablePro
                             </button>
                           </>
                         )}
+                         {romaneio.isSigned && romaneio.signedAt && (
+                           <span className="ml-4 text-xs text-gray-500">
+                             em {new Date(romaneio.signedAt).toLocaleDateString('pt-BR')}
+                           </span>
+                         )}
                       </td>
                     </tr>
                   ))
