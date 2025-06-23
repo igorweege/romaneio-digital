@@ -1,14 +1,21 @@
-// components/RomaneiosTable.tsx - VERSÃO COM COLUNA "AUTOR"
+// components/RomaneiosTable.tsx - VERSÃO COM TIPAGEM CORRIGIDA
 
 'use client';
 
 import { useState } from 'react';
-// O tipo agora precisa incluir o objeto aninhado 'author'
-import type { Romaneio as RomaneioWithAuthor } from '@prisma/client' & { author: { name: string | null } };
+import type { Romaneio } from '@prisma/client'; // Importamos o tipo base
 import CopyLinkButton from '@/components/CopyLinkButton';
 import Modal from '@/components/Modal';
 import QRCode from 'qrcode.react';
 
+// AQUI A CORREÇÃO: Criamos um tipo mais específico que inclui o autor
+type RomaneioWithAuthor = Romaneio & {
+  author: {
+    name: string | null;
+  } | null;
+};
+
+// Usamos esse novo tipo nas propriedades do componente
 interface RomaneiosTableProps {
   romaneios: RomaneioWithAuthor[];
   baseUrl: string;
@@ -54,7 +61,6 @@ export default function RomaneiosTable({ romaneios, baseUrl }: RomaneiosTablePro
                   <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
                     Nome do Solicitante
                   </th>
-                  {/* NOVA COLUNA DE AUTOR */}
                   <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                     Criado por
                   </th>
@@ -76,7 +82,6 @@ export default function RomaneiosTable({ romaneios, baseUrl }: RomaneiosTablePro
                       <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
                         {romaneio.nomeCompleto}
                       </td>
-                      {/* NOVA CÉLULA COM O NOME DO AUTOR */}
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {romaneio.author?.name || 'N/A'}
                       </td>
@@ -100,7 +105,7 @@ export default function RomaneiosTable({ romaneios, baseUrl }: RomaneiosTablePro
                             Visualizar PDF
                           </a>
                         )}
-                        {!romaneio.isSigned && (
+                        {!romaneio.isSigned && romaneio.signatureToken && (
                           <>
                             <CopyLinkButton link={getSignatureLink(romaneio.signatureToken)} />
                             <button onClick={() => setSelectedRomaneio(romaneio)} className="ml-4 text-sm font-medium text-osirnet-light-blue hover:text-osirnet-blue hover:underline">
