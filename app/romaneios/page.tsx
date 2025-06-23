@@ -1,4 +1,4 @@
-// app/romaneios/page.tsx - VERSÃO COM DADOS SIMPLIFICADOS
+// app/romaneios/page.tsx - VERSÃO FINAL COM BUSCA GERAL PARA TODOS
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -23,12 +23,11 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
     redirect('/login');
   }
 
+  // AQUI A CORREÇÃO: A cláusula 'where' começa vazia.
+  // Removemos completamente o filtro por 'authorId'.
   const whereClause: any = {};
 
-  if (session.user.role !== 'ADMIN') {
-    whereClause.authorId = session.user.id;
-  }
-
+  // A lógica de filtro de pesquisa continua funcionando normalmente
   if (searchParams.search) {
     whereClause.nomeCompleto = {
       contains: searchParams.search,
@@ -51,7 +50,7 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
   }
 
   const romaneiosFromDb = await prisma.romaneio.findMany({
-    where: whereClause,
+    where: whereClause, // A busca agora é aplicada a todos os romaneios
     orderBy: {
       createdAt: 'desc',
     },
@@ -64,11 +63,10 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
     },
   });
 
-  // Mapeamos os dados para um formato simples
   const romaneios = romaneiosFromDb.map(romaneio => ({
     ...romaneio,
     createdAt: romaneio.createdAt.toISOString(),
-    signedAt: romaneio.signedAt ? romaneio.signedAt.toISOString() : null, // Importante para o 'signedAt'
+    signedAt: romaneio.signedAt ? romaneio.signedAt.toISOString() : null,
     authorName: romaneio.author?.name || 'Desconhecido',
   }));
   
