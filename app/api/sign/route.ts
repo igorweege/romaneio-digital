@@ -1,4 +1,4 @@
-// app/api/sign/route.ts - VERSÃO COM CORREÇÃO DE TIPO E POSICIONAMENTO
+// app/api/sign/route.ts - VERSÃO COM RENOMEAÇÃO DE ARQUIVO
 
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
@@ -45,33 +45,37 @@ export async function POST(request: Request) {
     const signatureHeight = 75;
     const signatureWidth = 150;
     
-    // POSICIONAMENTO NO TOPO (como solicitado)
     firstPage.drawImage(signatureImageEmbed, {
-      x: width - signatureWidth - 20, // 20 unidades da borda direita
-      y: height - signatureHeight - 15, // 15 unidades da borda do topo
+      x: width - signatureWidth - 20,
+      y: height - signatureHeight - 15,
       width: signatureWidth,
       height: signatureHeight,
     });
 
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const signatureDate = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    const signatureDate = new Date(); // Guardamos o objeto Date para usar depois
+    const formattedDate = signatureDate.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
     
-    firstPage.drawText(`Assinado digitalmente em: ${signatureDate}`, {
+    firstPage.drawText(`Assinado digitalmente em: ${formattedDate}`, {
         x: width - signatureWidth - 20,
-        y: height - signatureHeight - 15 - 15, // 15 unidades abaixo da assinatura
+        y: height - signatureHeight - 15 - 15,
         size: 8,
         font: helveticaFont,
         color: rgb(0.2, 0.2, 0.2),
     });
 
     const signedPdfBytes = await pdfDoc.save();
-
-    // AQUI A CORREÇÃO DO ERRO DE TIPO: Convertendo Uint8Array para Buffer
     const signedPdfBuffer = Buffer.from(signedPdfBytes);
 
-    const newFileName = `assinado-${romaneio.fileName}`;
+    // --- LÓGICA DE RENOMEAÇÃO DO ARQUIVO ---
+    const today = new Date();
+    const dateString = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+    const sanitizedName = romaneio.nomeCompleto.replace(/[^a-zA-Z0-9]/g, '_').replace(/_{2,}/g, '_');
+    const newFileName = `${sanitizedName}_${dateString}.pdf`;
+    // --- FIM DA LÓGICA DE RENOMEAÇÃO ---
+
     const signedPdfUploadResult = await uploadClient.uploadFile(signedPdfBuffer, {
-      fileName: newFileName,
+      fileName: newFileName, // Usando o novo nome de arquivo
       contentType: 'application/pdf',
     });
     
@@ -85,10 +89,10 @@ export async function POST(request: Request) {
       },
       data: {
         isSigned: true,
-        signedAt: new Date(),
+        signedAt: signatureDate,
         signatureImageUrl: (await uploadClient.uploadFile(Buffer.from(signatureImage.split(',')[1], 'base64'))).cdnUrl,
         fileUrl: signedPdfUploadResult.cdnUrl,
-        fileName: newFileName,
+        fileName: newFileName, // Salvando o novo nome no banco de dados
       },
     });
 
