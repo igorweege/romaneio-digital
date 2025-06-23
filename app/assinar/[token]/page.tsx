@@ -1,7 +1,8 @@
-// app/assinar/[token]/page.tsx
+// app/assinar/[token]/page.tsx - VERSÃO ATUALIZADA
 
 import prisma from '@/lib/prisma';
 import { notFound } from 'next/navigation';
+import SignatureForm from '@/components/SignatureForm'; // 1. Importamos o formulário
 
 interface SignaturePageProps {
   params: {
@@ -16,19 +17,16 @@ export default async function SignaturePage({ params }: SignaturePageProps) {
     notFound();
   }
 
-  // Busca o romaneio pelo token único de assinatura
   const romaneio = await prisma.romaneio.findUnique({
     where: {
       signatureToken: token,
     },
   });
 
-  // Se não encontrar o romaneio, exibe página de não encontrado
   if (!romaneio) {
     notFound();
   }
 
-  // Se o romaneio já foi assinado, mostra uma mensagem amigável
   if (romaneio.isSigned) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
@@ -42,7 +40,6 @@ export default async function SignaturePage({ params }: SignaturePageProps) {
     );
   }
   
-  // Se o romaneio for válido e não assinado, mostra a página de assinatura
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-8">
       <div className="mx-auto max-w-4xl">
@@ -52,7 +49,6 @@ export default async function SignaturePage({ params }: SignaturePageProps) {
             Documento referente a: <strong>{romaneio.nomeCompleto}</strong>
           </p>
           
-          {/* Visualizador de PDF */}
           <div className="mt-6 border rounded-md overflow-hidden">
             {romaneio.fileUrl ? (
               <iframe
@@ -65,13 +61,9 @@ export default async function SignaturePage({ params }: SignaturePageProps) {
             )}
           </div>
 
-          {/* Área de Assinatura (Placeholder) */}
-          <div className="mt-8 pt-6 border-t">
-              <h2 className="text-xl font-semibold text-gray-800">Sua Assinatura</h2>
-              <div className="mt-4 p-8 bg-gray-50 rounded-md text-center">
-                <p className="text-gray-500">O campo para desenhar a assinatura aparecerá aqui no próximo passo.</p>
-              </div>
-          </div>
+          {/* 2. Usamos nosso componente interativo aqui, passando o ID do romaneio */}
+          <SignatureForm romaneioId={romaneio.id} />
+
         </div>
       </div>
     </div>
