@@ -1,4 +1,4 @@
-// app/dashboard/page.tsx - VERSÃO COM CORREÇÃO NO NOME DO CAMPO
+// app/dashboard/page.tsx - VERSÃO FINAL COM STATUS
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -58,6 +58,10 @@ export default async function Dashboard() {
                   <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                     Data de Criação
                   </th>
+                  {/* NOVA COLUNA DE STATUS */}
+                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                    Status
+                  </th>
                   <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                     Ações
                   </th>
@@ -73,6 +77,18 @@ export default async function Dashboard() {
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {new Date(romaneio.createdAt).toLocaleDateString('pt-BR')}
                       </td>
+                      {/* CÉLULA DE STATUS COM LÓGICA CONDICIONAL */}
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        {romaneio.isSigned ? (
+                          <span className="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                            Assinado
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-md bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">
+                            Pendente
+                          </span>
+                        )}
+                      </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {romaneio.fileUrl && (
                           <a
@@ -84,16 +100,22 @@ export default async function Dashboard() {
                             Visualizar PDF
                           </a>
                         )}
-                        {/* AQUI A CORREÇÃO DE 'signaturetoken' para 'signatureToken' */}
-                        <CopyLinkButton 
-                          link={`${baseUrl}/assinar/${romaneio.signatureToken}`}
-                        />
+                        {/* AÇÕES INTELIGENTES: SÓ MOSTRA O BOTÃO SE NÃO FOI ASSINADO */}
+                        {!romaneio.isSigned ? (
+                          <CopyLinkButton 
+                            link={`${baseUrl}/assinar/${romaneio.signatureToken}`}
+                          />
+                        ) : (
+                          <span className="ml-4 text-xs text-gray-500">
+                            em {new Date(romaneio.signedAt!).toLocaleDateString('pt-BR')}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={3} className="text-center py-4 text-sm text-gray-500">
+                    <td colSpan={4} className="text-center py-4 text-sm text-gray-500">
                       Nenhum romaneio encontrado.
                     </td>
                   </tr>
