@@ -1,4 +1,4 @@
-// app/api/sign/route.ts - VERSÃO COM RENOMEAÇÃO DE ARQUIVO
+// app/api/sign/route.ts - VERSÃO COM NOME DE ARQUIVO MAIS PRECISO
 
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     });
 
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const signatureDate = new Date(); // Guardamos o objeto Date para usar depois
+    const signatureDate = new Date();
     const formattedDate = signatureDate.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
     
     firstPage.drawText(`Assinado digitalmente em: ${formattedDate}`, {
@@ -67,15 +67,16 @@ export async function POST(request: Request) {
     const signedPdfBytes = await pdfDoc.save();
     const signedPdfBuffer = Buffer.from(signedPdfBytes);
 
-    // --- LÓGICA DE RENOMEAÇÃO DO ARQUIVO ---
-    const today = new Date();
-    const dateString = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
-    const sanitizedName = romaneio.nomeCompleto.replace(/[^a-zA-Z0-9]/g, '_').replace(/_{2,}/g, '_');
-    const newFileName = `${sanitizedName}_${dateString}.pdf`;
+    // --- LÓGICA DE RENOMEAÇÃO DO ARQUIVO (AGORA COM HORÁRIO) ---
+    const now = new Date();
+    const dateString = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+    const timeString = `${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}-${now.getSeconds().toString().padStart(2, '0')}`;
+    const sanitizedName = romaneio.nomeCompleto.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+    const newFileName = `${sanitizedName}_${dateString}_${timeString}.pdf`;
     // --- FIM DA LÓGICA DE RENOMEAÇÃO ---
 
     const signedPdfUploadResult = await uploadClient.uploadFile(signedPdfBuffer, {
-      fileName: newFileName, // Usando o novo nome de arquivo
+      fileName: newFileName,
       contentType: 'application/pdf',
     });
     
@@ -92,7 +93,7 @@ export async function POST(request: Request) {
         signedAt: signatureDate,
         signatureImageUrl: (await uploadClient.uploadFile(Buffer.from(signatureImage.split(',')[1], 'base64'))).cdnUrl,
         fileUrl: signedPdfUploadResult.cdnUrl,
-        fileName: newFileName, // Salvando o novo nome no banco de dados
+        fileName: newFileName,
       },
     });
 
