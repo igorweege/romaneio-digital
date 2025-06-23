@@ -1,20 +1,21 @@
-// components/RomaneiosTable.tsx - VERSÃO COM IMPORTAÇÃO CORRIGIDA
+// components/RomaneiosTable.tsx - VERSÃO COM COLUNA "AUTOR"
 
 'use client';
 
 import { useState } from 'react';
-import type { Romaneio } from '@prisma/client';
+// O tipo agora precisa incluir o objeto aninhado 'author'
+import type { Romaneio as RomaneioWithAuthor } from '@prisma/client' & { author: { name: string | null } };
 import CopyLinkButton from '@/components/CopyLinkButton';
 import Modal from '@/components/Modal';
-import QRCode from 'qrcode.react'; // AQUI A CORREÇÃO: import sem chaves { }
+import QRCode from 'qrcode.react';
 
 interface RomaneiosTableProps {
-  romaneios: Romaneio[];
+  romaneios: RomaneioWithAuthor[];
   baseUrl: string;
 }
 
 export default function RomaneiosTable({ romaneios, baseUrl }: RomaneiosTableProps) {
-  const [selectedRomaneio, setSelectedRomaneio] = useState<Romaneio | null>(null);
+  const [selectedRomaneio, setSelectedRomaneio] = useState<RomaneioWithAuthor | null>(null);
 
   const getSignatureLink = (token: string) => `${baseUrl}/assinar/${token}`;
 
@@ -44,7 +45,7 @@ export default function RomaneiosTable({ romaneios, baseUrl }: RomaneiosTablePro
       </Modal>
 
       <div className="mt-6 flow-root">
-        <h2 className="text-xl font-semibold text-gray-700">Romaneios Recentes</h2>
+        <h2 className="text-xl font-semibold text-gray-700">Listagem de Romaneios</h2>
         <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8 mt-4">
           <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
             <table className="min-w-full divide-y divide-gray-300">
@@ -52,6 +53,10 @@ export default function RomaneiosTable({ romaneios, baseUrl }: RomaneiosTablePro
                 <tr>
                   <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
                     Nome do Solicitante
+                  </th>
+                  {/* NOVA COLUNA DE AUTOR */}
+                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                    Criado por
                   </th>
                   <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                     Data de Criação
@@ -70,6 +75,10 @@ export default function RomaneiosTable({ romaneios, baseUrl }: RomaneiosTablePro
                     <tr key={romaneio.id}>
                       <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
                         {romaneio.nomeCompleto}
+                      </td>
+                      {/* NOVA CÉLULA COM O NOME DO AUTOR */}
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        {romaneio.author?.name || 'N/A'}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {new Date(romaneio.createdAt).toLocaleDateString('pt-BR')}
@@ -104,7 +113,7 @@ export default function RomaneiosTable({ romaneios, baseUrl }: RomaneiosTablePro
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="text-center py-4 text-sm text-gray-500">
+                    <td colSpan={5} className="text-center py-4 text-sm text-gray-500">
                       Nenhum romaneio encontrado.
                     </td>
                   </tr>

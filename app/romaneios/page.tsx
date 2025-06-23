@@ -1,4 +1,4 @@
-// app/romaneios/page.tsx - VERSÃO COM FILTROS
+// app/romaneios/page.tsx - VERSÃO COM BUSCA GERAL
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
 import RomaneiosTable from '@/components/RomaneiosTable';
-import FilterControls from '@/components/FilterControls'; // 1. Importamos os filtros
+import FilterControls from '@/components/FilterControls';
 
 interface RomaneiosPageProps {
   searchParams: {
@@ -23,9 +23,9 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
     redirect('/login');
   }
 
-  const whereClause: any = {
-    authorId: session.user.id,
-  };
+  // AQUI A MUDANÇA: A cláusula 'where' não filtra mais por autor.
+  // Ela está pronta para receber apenas os filtros de pesquisa.
+  const whereClause: any = {};
 
   if (searchParams.search) {
     whereClause.nomeCompleto = {
@@ -53,6 +53,14 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
     orderBy: {
       createdAt: 'desc',
     },
+    // Incluímos os dados do autor para poder exibir o nome na tabela
+    include: {
+        author: {
+            select: {
+                name: true,
+            },
+        },
+    },
   });
   
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
@@ -61,9 +69,9 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
     <div className="p-4 sm:p-8">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Meus Romaneios</h1>
+          <h1 className="text-3xl font-bold text-gray-800">Arquivo Geral de Romaneios</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Visualize e gerencie todos os seus romaneios.
+            Pesquise e gerencie todos os romaneios do sistema.
           </p>
         </div>
         <div>
@@ -76,10 +84,12 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
         </div>
       </div>
       
-      {/* 2. Adicionamos o formulário de filtro aqui */}
       <FilterControls />
 
-      <RomaneiosTable romaneios={romaneios} baseUrl={baseUrl} />
+      <RomaneiosTable 
+        romaneios={romaneios as any} 
+        baseUrl={baseUrl} 
+      />
 
     </div>
   );
