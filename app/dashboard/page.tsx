@@ -1,11 +1,11 @@
-// app/dashboard/page.tsx - VERSÃO COM BOTÃO DE COPIAR LINK
+// app/dashboard/page.tsx - VERSÃO COM CORREÇÃO NO NOME DO CAMPO
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
-import CopyLinkButton from '@/components/CopyLinkButton'; // 1. Importamos o botão
+import CopyLinkButton from '@/components/CopyLinkButton';
 
 export default async function Dashboard() {
   const session = await getServerSession(authOptions);
@@ -24,7 +24,6 @@ export default async function Dashboard() {
     take: 10,
   });
   
-  // 2. Pegamos a URL base do ambiente
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
   return (
@@ -85,7 +84,7 @@ export default async function Dashboard() {
                             Visualizar PDF
                           </a>
                         )}
-                        {/* 3. Usamos o botão aqui, construindo o link completo */}
+                        {/* AQUI A CORREÇÃO DE 'signaturetoken' para 'signatureToken' */}
                         <CopyLinkButton 
                           link={`${baseUrl}/assinar/${romaneio.signatureToken}`}
                         />
