@@ -1,4 +1,4 @@
-// components/PdfViewer.tsx
+// components/PdfViewer.tsx - VERSÃO FINAL USANDO CDN
 
 'use client';
 
@@ -8,15 +8,11 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
-// Configuração ESSENCIAL para o pdf.js funcionar com o Next.js
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url,
-).toString();
+// AQUI A MUDANÇA: Apontamos para uma CDN pública e confiável
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 export default function PdfViewer({ fileUrl }: { fileUrl: string }) {
   const [numPages, setNumPages] = useState<number>();
-  const [pageNumber, setPageNumber] = useState<number>(1);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
     setNumPages(numPages);
@@ -29,7 +25,7 @@ export default function PdfViewer({ fileUrl }: { fileUrl: string }) {
           file={fileUrl} 
           onLoadSuccess={onDocumentLoadSuccess}
           loading={<div className="p-4 text-center">Carregando PDF...</div>}
-          error={<div className="p-4 text-center text-red-600">Falha ao carregar o PDF.</div>}
+          error={<div className="p-4 text-center text-red-600">Falha ao carregar o PDF. Por favor, tente baixar o arquivo.</div>}
         >
           {Array.from(new Array(numPages), (el, index) => (
             <Page
@@ -37,14 +33,16 @@ export default function PdfViewer({ fileUrl }: { fileUrl: string }) {
               pageNumber={index + 1}
               renderTextLayer={false}
               renderAnnotationLayer={false}
-              width={800} // Você pode ajustar a largura aqui
+              width={800}
             />
           ))}
         </Document>
       </div>
-      <p className="mt-2 text-sm text-gray-600">
-        Página {pageNumber} de {numPages}
-      </p>
+      {numPages && (
+        <p className="mt-2 text-sm text-gray-600">
+          Total de {numPages} página(s)
+        </p>
+      )}
     </div>
   );
 }
