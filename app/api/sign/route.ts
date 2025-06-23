@@ -1,18 +1,18 @@
-// app/api/sign/route.ts
+// app/api/sign/route.ts - VERSÃO COM CORREÇÃO DE TIPO E POSICIONAMENTO
 
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { UploadClient } from '@uploadcare/upload-client';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 const uploadClient = new UploadClient({
   publicKey: process.env.UPLOADCARE_PUBLIC_KEY || '',
 });
 
-// Schema para validar os dados recebidos
 const signSchema = z.object({
   romaneioId: z.string(),
-  signatureImage: z.string().startsWith('data:image/png;base64,'), // Garante que é uma imagem PNG em base64
+  signatureImage: z.string().startsWith('data:image/png;base64,'),
 });
 
 export async function POST(request: Request) {
@@ -26,38 +26,76 @@ export async function POST(request: Request) {
 
     const { romaneioId, signatureImage } = validatedData.data;
 
-    // 1. Converte a imagem base64 para um Buffer (formato de arquivo)
-    const base64Data = signatureImage.split(',')[1];
-    const imageBuffer = Buffer.from(base64Data, 'base64');
-    
-    // 2. Faz o upload da imagem da assinatura para o Uploadcare
-    const uploadResult = await uploadClient.uploadFile(imageBuffer, {
-        fileName: `signature-${romaneioId}.png`,
-        contentType: 'image/png',
+    const romaneio = await prisma.romaneio.findUnique({
+      where: { id: romaneioId, isSigned: false },
     });
 
-    if (!uploadResult?.cdnUrl) {
-        throw new Error("Falha no upload da imagem da assinatura.");
+    if (!romaneio || !romaneio.fileUrl) {
+      throw new Error('Romaneio não encontrado ou PDF original ausente.');
     }
 
-    // 3. Atualiza o romaneio no banco de dados
+    const originalPdfBytes = await fetch(romaneio.fileUrl).then((res) => res.arrayBuffer());
+    const pdfDoc = await PDFDocument.load(originalPdfBytes);
+    const signatureImageBytes = Buffer.from(signatureImage.split(',')[1], 'base64');
+    const signatureImageEmbed = await pdfDoc.embedPng(signatureImageBytes);
+    
+    const firstPage = pdfDoc.getPages()[0];
+    const { width, height } = firstPage.getSize();
+    
+    const signatureHeight = 75;
+    const signatureWidth = 150;
+    
+    // POSICIONAMENTO NO TOPO (como solicitado)
+    firstPage.drawImage(signatureImageEmbed, {
+      x: width - signatureWidth - 20, // 20 unidades da borda direita
+      y: height - signatureHeight - 15, // 15 unidades da borda do topo
+      width: signatureWidth,
+      height: signatureHeight,
+    });
+
+    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const signatureDate = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    
+    firstPage.drawText(`Assinado digitalmente em: ${signatureDate}`, {
+        x: width - signatureWidth - 20,
+        y: height - signatureHeight - 15 - 15, // 15 unidades abaixo da assinatura
+        size: 8,
+        font: helveticaFont,
+        color: rgb(0.2, 0.2, 0.2),
+    });
+
+    const signedPdfBytes = await pdfDoc.save();
+
+    // AQUI A CORREÇÃO DO ERRO DE TIPO: Convertendo Uint8Array para Buffer
+    const signedPdfBuffer = Buffer.from(signedPdfBytes);
+
+    const newFileName = `assinado-${romaneio.fileName}`;
+    const signedPdfUploadResult = await uploadClient.uploadFile(signedPdfBuffer, {
+      fileName: newFileName,
+      contentType: 'application/pdf',
+    });
+    
+    if (!signedPdfUploadResult?.cdnUrl) {
+      throw new Error('Falha no upload do PDF assinado.');
+    }
+
     const updatedRomaneio = await prisma.romaneio.update({
       where: {
         id: romaneioId,
-        isSigned: false, // Garante que só podemos assinar uma vez
       },
       data: {
         isSigned: true,
         signedAt: new Date(),
-        signatureImageUrl: uploadResult.cdnUrl,
+        signatureImageUrl: (await uploadClient.uploadFile(Buffer.from(signatureImage.split(',')[1], 'base64'))).cdnUrl,
+        fileUrl: signedPdfUploadResult.cdnUrl,
+        fileName: newFileName,
       },
     });
 
     return NextResponse.json(updatedRomaneio, { status: 200 });
 
   } catch (error) {
-    console.error("Erro ao salvar assinatura:", error);
-    // Verificamos se o erro já tem uma mensagem legível
+    console.error("Erro ao salvar e mesclar assinatura:", error);
     const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
