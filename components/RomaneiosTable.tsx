@@ -1,21 +1,20 @@
-// components/RomaneiosTable.tsx - VERSÃO COM TIPAGEM CORRIGIDA
+// components/RomaneiosTable.tsx - VERSÃO COM CORREÇÃO FINAL DE TIPAGEM
 
 'use client';
 
 import { useState } from 'react';
-import type { Romaneio } from '@prisma/client'; // Importamos o tipo base
+import { Prisma } from '@prisma/client'; // Importamos o Prisma para usar seus tipos
 import CopyLinkButton from '@/components/CopyLinkButton';
 import Modal from '@/components/Modal';
 import QRCode from 'qrcode.react';
 
-// AQUI A CORREÇÃO: Criamos um tipo mais específico que inclui o autor
-type RomaneioWithAuthor = Romaneio & {
-  author: {
-    name: string | null;
-  } | null;
-};
+// AQUI A CORREÇÃO: Usamos o Prisma para gerar um tipo perfeito e automático
+const romaneioWithAuthor = Prisma.validator<Prisma.RomaneioDefaultArgs>()({
+  include: { author: { select: { name: true } } },
+});
+type RomaneioWithAuthor = Prisma.RomaneioGetPayload<typeof romaneioWithAuthor>;
 
-// Usamos esse novo tipo nas propriedades do componente
+
 interface RomaneiosTableProps {
   romaneios: RomaneioWithAuthor[];
   baseUrl: string;
