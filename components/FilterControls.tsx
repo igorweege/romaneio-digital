@@ -1,9 +1,9 @@
-// components/FilterControls.tsx - VERSÃO COM SUBMISSÃO POR ENTER
+// components/FilterControls.tsx - VERSÃO COM CORREÇÃO DE TYPO
 
 'use client';
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useState, FormEvent } from 'react'; // Importamos FormEvent
+import { useState, FormEvent } from 'react';
 
 export default function FilterControls() {
   const router = useRouter();
@@ -12,19 +12,26 @@ export default function FilterControls() {
 
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [startDate, setStartDate] = useState(searchParams.get('startDate') || '');
-  const [endDate, setEndDate] = useState(search_params.get('endDate') || '');
+  // AQUI A CORREÇÃO:
+  const [endDate, setEndDate] = useState(searchParams.get('endDate') || '');
 
   const handleFilter = (e: FormEvent) => {
-    e.preventDefault(); // Previne o recarregamento completo da página
-    const params = new URLSearchParams();
+    e.preventDefault(); 
+    const params = new URLSearchParams(searchParams.toString()); // Preserva os filtros existentes
     if (searchTerm) {
       params.set('search', searchTerm);
+    } else {
+      params.delete('search');
     }
     if (startDate) {
       params.set('startDate', startDate);
+    } else {
+      params.delete('startDate');
     }
     if (endDate) {
       params.set('endDate', endDate);
+    } else {
+      params.delete('endDate');
     }
     router.push(`${pathname}?${params.toString()}`);
   };
@@ -37,7 +44,6 @@ export default function FilterControls() {
   };
 
   return (
-    // Envolvemos tudo em um formulário com o evento onSubmit
     <form onSubmit={handleFilter} className="p-4 bg-gray-50 rounded-lg border mb-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
         {/* Filtro por Nome */}
@@ -83,14 +89,14 @@ export default function FilterControls() {
       </div>
       <div className="mt-4 flex justify-end gap-x-3">
         <button
-            type="button" // Tipo 'button' para não submeter o formulário
+            type="button"
             onClick={handleClear}
             className="text-sm font-semibold text-gray-600 hover:text-gray-900"
         >
             Limpar Filtros
         </button>
         <button
-            type="submit" // Tipo 'submit' para ser acionado pelo Enter
+            type="submit"
             className="rounded-md bg-osirnet-blue px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90"
         >
             Filtrar
