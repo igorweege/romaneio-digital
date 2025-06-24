@@ -1,4 +1,4 @@
-// app/romaneios/page.tsx - VERSÃO COM BUSCA INTELIGENTE
+// app/romaneios/page.tsx - VERSÃO COM LÓGICA DE PAGINAÇÃO
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -13,6 +13,7 @@ interface RomaneiosPageProps {
     search?: string;
     startDate?: string;
     endDate?: string;
+    page?: string; // Parâmetro para a página atual
   };
 }
 
@@ -23,24 +24,24 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
     redirect('/login');
   }
 
+  // Lógica de Paginação
+  const page = Number(searchParams.page) || 1;
+  const pageSize = 25; // 25 itens por página
+  const skip = (page - 1) * pageSize;
+
   const whereClause: any = {};
 
-  // --- LÓGICA DE BUSCA INTELIGENTE ---
   if (searchParams.search) {
-    // 1. Divide o termo de busca em palavras individuais
     const searchTerms = searchParams.search.trim().split(' ').filter(term => term.length > 0);
-
-    // 2. Cria uma condição 'E' (AND) para cada palavra
     if (searchTerms.length > 0) {
       whereClause.AND = searchTerms.map(term => ({
         nomeCompleto: {
           contains: term,
-          mode: 'insensitive', // Não diferencia maiúsculas/minúsculas
+          mode: 'insensitive',
         },
       }));
     }
   }
-  // --- FIM DA LÓGICA DE BUSCA ---
   
   if (searchParams.startDate) {
     whereClause.createdAt = {
@@ -56,11 +57,14 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
     };
   }
 
+  // Fazemos duas buscas: uma para os dados da página e outra para a contagem total
   const romaneiosFromDb = await prisma.romaneio.findMany({
     where: whereClause,
     orderBy: {
       createdAt: 'desc',
     },
+    skip: skip,
+    take: pageSize,
     include: {
         author: {
             select: {
@@ -69,6 +73,9 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
         },
     },
   });
+
+  const totalRomaneios = await prisma.romaneio.count({ where: whereClause });
+  const totalPages = Math.ceil(totalRomaneios / pageSize);
 
   const romaneios = romaneiosFromDb.map(romaneio => ({
     ...romaneio,
@@ -100,7 +107,12 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
       
       <FilterControls />
 
-      <RomaneiosTable romaneios={romaneios as any} baseUrl={baseUrl} />
+      <RomaneiosTable 
+        romaneios={romaneios as any} 
+        baseUrl={baseUrl} 
+        currentPage={page}
+        totalPages={totalPages}
+      />
 
     </div>
   );
