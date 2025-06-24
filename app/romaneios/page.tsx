@@ -1,4 +1,4 @@
-// app/romaneios/page.tsx - VERSÃO FINAL COM BUSCA GERAL PARA TODOS
+// app/romaneios/page.tsx - VERSÃO COM BUSCA INTELIGENTE
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -23,17 +23,24 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
     redirect('/login');
   }
 
-  // AQUI A CORREÇÃO: A cláusula 'where' começa vazia.
-  // Removemos completamente o filtro por 'authorId'.
   const whereClause: any = {};
 
-  // A lógica de filtro de pesquisa continua funcionando normalmente
+  // --- LÓGICA DE BUSCA INTELIGENTE ---
   if (searchParams.search) {
-    whereClause.nomeCompleto = {
-      contains: searchParams.search,
-      mode: 'insensitive',
-    };
+    // 1. Divide o termo de busca em palavras individuais
+    const searchTerms = searchParams.search.trim().split(' ').filter(term => term.length > 0);
+
+    // 2. Cria uma condição 'E' (AND) para cada palavra
+    if (searchTerms.length > 0) {
+      whereClause.AND = searchTerms.map(term => ({
+        nomeCompleto: {
+          contains: term,
+          mode: 'insensitive', // Não diferencia maiúsculas/minúsculas
+        },
+      }));
+    }
   }
+  // --- FIM DA LÓGICA DE BUSCA ---
   
   if (searchParams.startDate) {
     whereClause.createdAt = {
@@ -50,7 +57,7 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
   }
 
   const romaneiosFromDb = await prisma.romaneio.findMany({
-    where: whereClause, // A busca agora é aplicada a todos os romaneios
+    where: whereClause,
     orderBy: {
       createdAt: 'desc',
     },
