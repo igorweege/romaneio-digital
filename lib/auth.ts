@@ -1,10 +1,11 @@
-// lib/auth.ts - VERSÃO COMPLETA E CORRIGIDA
+// lib/auth.ts - VERSÃO COM LOG DE LOGIN
 
 import { NextAuthOptions } from 'next-auth';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import prisma from './prisma';
 import bcrypt from 'bcryptjs';
+import { createLogEntry } from './logging'; // Importamos nossa função de log
 
 // Adicionamos as tipagens para o que queremos no token e na sessão
 declare module 'next-auth' {
@@ -68,10 +69,7 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
   },
-  // ESTA É A PARTE NOVA E MAIS IMPORTANTE
   callbacks: {
-    // 1. O callback 'jwt' é chamado primeiro.
-    // Ele pega os dados do 'user' (do authorize) e os coloca no 'token'.
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
@@ -79,8 +77,6 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
-    // 2. O callback 'session' é chamado em seguida.
-    // Ele pega os dados do 'token' e os coloca na 'session.user'.
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id;
@@ -89,6 +85,19 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
+
+  // NOVO BLOCO DE EVENTOS ADICIONADO AQUI
+  events: {
+    async signIn(message) {
+      if (message.user) {
+        await createLogEntry({
+          userId: message.user.id,
+          message: `Usuário '${message.user.name}' fez login no sistema.`
+        });
+      }
+    }
+  },
+
   pages: {
     signIn: '/login',
   },
