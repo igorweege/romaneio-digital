@@ -1,4 +1,4 @@
-// prisma/schema.prisma - VERSÃO FINAL E CORRETA
+// prisma/schema.prisma - VERSÃO COM TABELA DE LOGS
 
 generator client {
   provider = "prisma-client-js"
@@ -18,6 +18,7 @@ model User {
   createdAt DateTime   @default(now())
   
   romaneios Romaneio[]
+  logs      LogEntry[] // Relação: Um usuário pode ter várias entradas de log
 }
 
 model Romaneio {
@@ -30,8 +31,6 @@ model Romaneio {
   isSigned          Boolean   @default(false)
   signedAt          DateTime?
   signatureToken    String    @unique @default(cuid())
-  
-  // O CAMPO QUE FALTAVA ESTÁ AQUI
   signatureImageUrl String?
 
   createdAt         DateTime  @default(now())
@@ -39,9 +38,25 @@ model Romaneio {
 
   author            User      @relation(fields: [authorId], references: [id])
   authorId          String
+
+  logs              LogEntry[] // Relação: Um romaneio pode ter várias entradas de log
 }
 
 enum Role {
   ADMIN
   USER
+}
+
+// NOVO MODELO PARA OS LOGS
+model LogEntry {
+  id         String    @id @default(cuid())
+  message    String    // Mensagem do log (ex: "Usuário Igor criou o romaneio para Cliente X")
+  createdAt  DateTime  @default(now())
+
+  // Relações opcionais para rastreamento
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id])
+  
+  romaneioId String?
+  romaneio   Romaneio? @relation(fields: [romaneioId], references: [id], onDelete: Cascade)
 }

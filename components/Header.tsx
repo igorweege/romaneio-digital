@@ -1,4 +1,4 @@
-// components/Header.tsx - VERSÃO FINAL COM ESQUELETO DE LOADING
+// components/Header.tsx - VERSÃO COM LINK PARA LOGS
 
 'use client';
 
@@ -12,33 +12,14 @@ export default function Header() {
   const user = session?.user;
   const pathname = usePathname();
 
-  // Se a sessão estiver carregando, mostramos um "esqueleto" para evitar o pisca-pisca.
   if (status === 'loading') {
-    return (
-      <header className="bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 justify-between items-center animate-pulse">
-            <div className="flex items-center gap-x-8">
-              <div className="h-8 w-32 bg-gray-200 rounded"></div>
-              <div className="h-4 w-20 bg-gray-200 rounded"></div>
-              <div className="h-4 w-20 bg-gray-200 rounded"></div>
-            </div>
-            <div className="flex items-center gap-x-4">
-              <div className="h-4 w-24 bg-gray-200 rounded"></div>
-              <div className="h-9 w-14 bg-gray-200 rounded-md"></div>
-            </div>
-          </div>
-        </div>
-      </header>
-    );
+    return <header className="h-16 bg-white shadow-sm" />;
   }
-
-  // Se não houver sessão, não retorna nada.
+  
   if (!session) {
     return null;
   }
 
-  // Se a sessão estiver carregada, mostra o header completo.
   return (
     <header className="bg-white shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -78,16 +59,29 @@ export default function Header() {
                 Romaneios
               </Link>
               {user?.role === 'ADMIN' && (
-                <Link
-                  href="/admin"
-                  className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
-                    pathname.startsWith('/admin')
-                      ? 'border-osirnet-blue text-gray-900'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`}
-                >
-                  Admin
-                </Link>
+                <>
+                  <Link
+                    href="/admin"
+                    className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
+                      pathname === '/admin'
+                        ? 'border-osirnet-blue text-gray-900'
+                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                    }`}
+                  >
+                    Usuários
+                  </Link>
+                  {/* NOVO LINK DE LOGS */}
+                  <Link
+                    href="/admin/logs"
+                    className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
+                      pathname === '/admin/logs'
+                        ? 'border-osirnet-blue text-gray-900'
+                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                    }`}
+                  >
+                    Logs
+                  </Link>
+                </>
               )}
             </div>
           </div>

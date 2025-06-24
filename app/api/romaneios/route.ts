@@ -1,10 +1,11 @@
-// app/api/romaneios/route.ts - VERSÃO COM VERIFICAÇÃO EXTRA
+// app/api/romaneios/route.ts - VERSÃO COM LOGGING
 
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { UploadClient } from '@uploadcare/upload-client';
+import { createLogEntry } from '@/lib/logging'; // 1. Importamos nossa função de log
 
 const uploadClient = new UploadClient({
   publicKey: process.env.UPLOADCARE_PUBLIC_KEY || '',
@@ -37,9 +38,8 @@ export async function POST(request: Request) {
       contentType: file.type,
     });
 
-    // NOVA VERIFICAÇÃO DE SEGURANÇA
     if (!uploadResult?.cdnUrl) {
-      throw new Error("Falha no upload do arquivo para o serviço de armazenamento.");
+      throw new Error('Falha no upload do arquivo para o serviço de armazenamento.');
     }
 
     const novoRomaneio = await prisma.romaneio.create({
@@ -52,12 +52,18 @@ export async function POST(request: Request) {
         fileUrl: uploadResult.cdnUrl,
       },
     });
-    
+
+    // 2. Registramos o evento de criação no log
+    await createLogEntry({
+      userId: session.user.id,
+      romaneioId: novoRomaneio.id,
+      message: `Usuário '${session.user.name}' criou o romaneio para '${novoRomaneio.nomeCompleto}'.`,
+    });
+
     return NextResponse.json(novoRomaneio, { status: 201 });
 
   } catch (error) {
     console.error("Falha ao criar romaneio com upload:", error);
-    // Verificamos se o erro já tem uma mensagem legível
     const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
