@@ -1,4 +1,4 @@
-// components/Header.tsx - VERSÃO COM HEADER AMARELO
+// components/Header.tsx - VERSÃO DEFINITIVA COM TODOS OS LINKS E CORREÇÕES
 
 'use client';
 
@@ -13,8 +13,23 @@ export default function Header() {
   const pathname = usePathname();
 
   if (status === 'loading') {
-    // Esqueleto de loading para evitar "pulo" na tela
-    return <header className="h-16 bg-white shadow-sm" />;
+    return (
+      <header className="bg-osirnet-yellow shadow-sm">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 justify-between items-center animate-pulse">
+            <div className="flex items-center gap-x-8">
+              <div className="h-10 w-36 bg-yellow-300 rounded"></div>
+              <div className="h-4 w-20 bg-yellow-300 rounded"></div>
+              <div className="h-4 w-20 bg-yellow-300 rounded"></div>
+            </div>
+            <div className="flex items-center gap-x-4">
+              <div className="h-4 w-24 bg-yellow-300 rounded"></div>
+              <div className="h-9 w-14 bg-red-400 rounded-md"></div>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
   }
 
   if (!session) {
@@ -22,7 +37,6 @@ export default function Header() {
   }
 
   return (
-    // FUNDO DO HEADER ATUALIZADO PARA AMARELO
     <header className="bg-osirnet-yellow shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between">
@@ -30,23 +44,22 @@ export default function Header() {
             <div className="flex flex-shrink-0 items-center">
               <Link href="/dashboard">
                 <Image
-                  className="h-10 w-auto" // AUMENTEI A ALTURA
+                  className="h-10 w-auto"
                   src="/logo-osirnet.png"
                   alt="Logo Osirnet"
-                  width={175} // AUMENTEI A LARGURA
+                  width={175}
                   height={40}
                   priority
                 />
               </Link>
             </div>
-            {/* TEXTOS E BORDAS DOS LINKS ATUALIZADOS PARA O AZUL ESCURO */}
             <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
               <Link
                 href="/dashboard"
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
                   pathname === '/dashboard'
                     ? 'border-osirnet-dark-blue text-osirnet-dark-blue'
-                    : 'border-transparent text-gray-700 hover:border-gray-400 hover:text-osirnet-dark-blue'
+                    : 'border-transparent text-gray-700 hover:border-gray-500 hover:text-osirnet-dark-blue'
                 }`}
               >
                 Dashboard
@@ -56,22 +69,35 @@ export default function Header() {
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
                   pathname.startsWith('/romaneios')
                     ? 'border-osirnet-dark-blue text-osirnet-dark-blue'
-                    : 'border-transparent text-gray-700 hover:border-gray-400 hover:text-osirnet-dark-blue'
+                    : 'border-transparent text-gray-700 hover:border-gray-500 hover:text-osirnet-dark-blue'
                 }`}
               >
                 Romaneios
               </Link>
               {user?.role === 'ADMIN' && (
-                <Link
-                  href="/admin"
-                  className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
-                    pathname.startsWith('/admin')
-                      ? 'border-osirnet-dark-blue text-osirnet-dark-blue'
-                      : 'border-transparent text-gray-700 hover:border-gray-400 hover:text-osirnet-dark-blue'
-                  }`}
-                >
-                  Admin
-                </Link>
+                <>
+                  <Link
+                    href="/admin"
+                    className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
+                      pathname === '/admin'
+                        ? 'border-osirnet-dark-blue text-osirnet-dark-blue'
+                        : 'border-transparent text-gray-700 hover:border-gray-500 hover:text-osirnet-dark-blue'
+                    }`}
+                  >
+                    Usuários
+                  </Link>
+                  {/* LINK DE LOGS RESTAURADO AQUI */}
+                  <Link
+                    href="/admin/logs"
+                    className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
+                      pathname === '/admin/logs'
+                        ? 'border-osirnet-dark-blue text-osirnet-dark-blue'
+                        : 'border-transparent text-gray-700 hover:border-gray-500 hover:text-osirnet-dark-blue'
+                    }`}
+                  >
+                    Logs
+                  </Link>
+                </>
               )}
             </div>
           </div>
