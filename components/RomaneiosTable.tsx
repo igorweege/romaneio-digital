@@ -1,4 +1,4 @@
-// components/RomaneiosTable.tsx - VERSÃO COM PAGINAÇÃO
+// components/RomaneiosTable.tsx - VERSÃO COM BOTÃO DE DOWNLOAD
 
 'use client';
 
@@ -7,16 +7,14 @@ import type { Romaneio } from '@prisma/client';
 import CopyLinkButton from '@/components/CopyLinkButton';
 import Modal from '@/components/Modal';
 import QRCode from 'qrcode.react';
-import PaginationControls from './PaginationControls'; // 1. Importamos os controles
+import PaginationControls from './PaginationControls';
 
-// O tipo agora precisa incluir o objeto aninhado 'author'
 type RomaneioWithAuthor = Romaneio & {
   author: {
     name: string | null;
   } | null;
 };
 
-// Adicionamos as novas propriedades para paginação
 interface RomaneiosTableProps {
   romaneios: RomaneioWithAuthor[];
   baseUrl: string;
@@ -36,7 +34,6 @@ export default function RomaneiosTable({ romaneios, baseUrl, currentPage, totalP
         onClose={() => setSelectedRomaneio(null)}
         title="QR Code para Assinatura"
       >
-        {/* ... (código do modal continua o mesmo) ... */}
         {selectedRomaneio && (
           <div className="flex flex-col items-center justify-center p-4">
             <QRCode 
@@ -56,10 +53,10 @@ export default function RomaneiosTable({ romaneios, baseUrl, currentPage, totalP
       </Modal>
 
       <div className="mt-6 flow-root">
+        <h2 className="text-xl font-semibold text-gray-700">Listagem de Romaneios</h2>
         <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
             <table className="min-w-full divide-y divide-gray-300">
-              {/* ... (cabeçalho da tabela continua o mesmo) ... */}
               <thead>
                 <tr>
                   <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
@@ -80,8 +77,7 @@ export default function RomaneiosTable({ romaneios, baseUrl, currentPage, totalP
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {/* ... (corpo da tabela continua o mesmo) ... */}
-                 {romaneios.length > 0 ? (
+                {romaneios.length > 0 ? (
                   romaneios.map((romaneio) => (
                     <tr key={romaneio.id}>
                       <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
@@ -106,17 +102,18 @@ export default function RomaneiosTable({ romaneios, baseUrl, currentPage, totalP
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {romaneio.fileUrl && (
-                          <a href={romaneio.fileUrl} target="_blank" rel="noopener noreferrer" className="text-osirnet-light-blue hover:text-osirnet-blue hover:underline">
-                            Visualizar PDF
-                          </a>
+                          <>
+                            <a href={romaneio.fileUrl} target="_blank" rel="noopener noreferrer" className="text-osirnet-light-blue hover:text-osirnet-blue hover:underline">
+                              Visualizar
+                            </a>
+                            {/* NOVO BOTÃO DE DOWNLOAD */}
+                            <a href={romaneio.fileUrl} download={romaneio.fileName} className="ml-4 text-osirnet-light-blue hover:text-osirnet-blue hover:underline">
+                              Baixar
+                            </a>
+                          </>
                         )}
                         {!romaneio.isSigned && romaneio.signatureToken && (
-                          <>
-                            <CopyLinkButton link={getSignatureLink(romaneio.signatureToken)} />
-                            <button onClick={() => setSelectedRomaneio(romaneio)} className="ml-4 text-sm font-medium text-osirnet-light-blue hover:text-osirnet-blue hover:underline">
-                              QR Code
-                            </button>
-                          </>
+                          <CopyLinkButton link={getSignatureLink(romaneio.signatureToken)} />
                         )}
                       </td>
                     </tr>
@@ -134,7 +131,6 @@ export default function RomaneiosTable({ romaneios, baseUrl, currentPage, totalP
         </div>
       </div>
       
-      {/* 2. Adicionamos os controles de paginação aqui em baixo */}
       {totalPages > 1 && (
         <PaginationControls 
           currentPage={currentPage} 
