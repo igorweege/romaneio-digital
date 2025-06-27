@@ -1,4 +1,4 @@
-// components/Header.tsx - VERSÃO COM LINK PARA LOGS
+// components/Header.tsx - VERSÃO COM TEMA OSIRNET
 
 'use client';
 
@@ -12,16 +12,14 @@ export default function Header() {
   const user = session?.user;
   const pathname = usePathname();
 
-  if (status === 'loading') {
-    return <header className="h-16 bg-white shadow-sm" />;
+  if (status === 'loading' || !session) {
+    // Retorna um header vazio enquanto carrega ou se não há sessão,
+    // para manter o espaço na página sem mostrar conteúdo.
+    return <header className="h-16 bg-osirnet-dark-blue" />;
   }
   
-  if (!session) {
-    return null;
-  }
-
   return (
-    <header className="bg-white shadow-sm">
+    <header className="bg-osirnet-dark-blue text-white shadow-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between">
           <div className="flex">
@@ -42,8 +40,8 @@ export default function Header() {
                 href="/dashboard"
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
                   pathname === '/dashboard'
-                    ? 'border-osirnet-blue text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                    ? 'border-osirnet-yellow text-white'
+                    : 'border-transparent text-gray-300 hover:border-gray-400 hover:text-white'
                 }`}
               >
                 Dashboard
@@ -52,41 +50,28 @@ export default function Header() {
                 href="/romaneios"
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
                   pathname.startsWith('/romaneios')
-                    ? 'border-osirnet-blue text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                    ? 'border-osirnet-yellow text-white'
+                    : 'border-transparent text-gray-300 hover:border-gray-400 hover:text-white'
                 }`}
               >
                 Romaneios
               </Link>
               {user?.role === 'ADMIN' && (
-                <>
-                  <Link
-                    href="/admin"
-                    className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
-                      pathname === '/admin'
-                        ? 'border-osirnet-blue text-gray-900'
-                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                    }`}
-                  >
-                    Usuários
-                  </Link>
-                  {/* NOVO LINK DE LOGS */}
-                  <Link
-                    href="/admin/logs"
-                    className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
-                      pathname === '/admin/logs'
-                        ? 'border-osirnet-blue text-gray-900'
-                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                    }`}
-                  >
-                    Logs
-                  </Link>
-                </>
+                <Link
+                  href="/admin"
+                  className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
+                    pathname.startsWith('/admin')
+                      ? 'border-osirnet-yellow text-white'
+                      : 'border-transparent text-gray-300 hover:border-gray-400 hover:text-white'
+                  }`}
+                >
+                  Admin
+                </Link>
               )}
             </div>
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
-             <span className="text-sm text-gray-600 mr-4">
+             <span className="text-sm text-gray-200 mr-4">
                 Olá, {user?.name}
              </span>
              <button

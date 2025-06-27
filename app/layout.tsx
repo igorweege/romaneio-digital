@@ -1,4 +1,4 @@
-// app/layout.tsx - VERSÃO COM HEADER SEMPRE PRESENTE
+// app/layout.tsx - VERSÃO ATUALIZADA
 
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -24,12 +24,8 @@ export default async function RootLayout({
 
   return (
     <html lang="pt-BR">
-      <body className={inter.className}>
+      <body className={`${inter.className} bg-gray-50`}>
         <AuthProvider session={session}>
-          {/* MUDANÇA AQUI: Renderizamos o Header incondicionalmente.
-            O próprio Header já tem a lógica interna para se esconder
-            se não houver sessão.
-          */}
           <Header />
           <main>{children}</main>
         </AuthProvider>
