@@ -1,4 +1,4 @@
-// app/romaneios/page.tsx - VERSÃO CORRETA E VALIDADA
+// app/romaneios/page.tsx - VERSÃO COM LÓGICA DE FILTRO DE STATUS
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -14,6 +14,7 @@ interface RomaneiosPageProps {
     startDate?: string;
     endDate?: string;
     page?: string;
+    status?: string; // NOVO PARÂMETRO DE STATUS
   };
 }
 
@@ -42,6 +43,15 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
     }
   }
   
+  // --- NOVA LÓGICA DE FILTRO DE STATUS ---
+  if (searchParams.status === 'SIGNED') {
+    whereClause.isSigned = true;
+  } else if (searchParams.status === 'PENDING') {
+    whereClause.isSigned = false;
+  }
+  // Se o status não for nenhum desses, não adiciona o filtro, mostrando todos.
+  // --- FIM DA LÓGICA ---
+
   if (searchParams.startDate) {
     whereClause.createdAt = {
       ...whereClause.createdAt,
@@ -58,31 +68,15 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
 
   const romaneiosFromDb = await prisma.romaneio.findMany({
     where: whereClause,
-    orderBy: {
-      createdAt: 'desc',
-    },
+    orderBy: { createdAt: 'desc' },
     skip: skip,
     take: pageSize,
-    include: {
-        author: {
-            select: {
-                name: true,
-            },
-        },
-    },
+    include: { author: { select: { name: true } } },
   });
 
   const totalRomaneios = await prisma.romaneio.count({ where: whereClause });
   const totalPages = Math.ceil(totalRomaneios / pageSize);
 
-  // Mapeamento para garantir que os dados são serializáveis
-  const romaneios = romaneiosFromDb.map(romaneio => ({
-    ...romaneio,
-    createdAt: romaneio.createdAt.toISOString(),
-    signedAt: romaneio.signedAt ? romaneio.signedAt.toISOString() : null,
-    authorName: romaneio.author?.name || 'Desconhecido',
-  }));
-  
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
   return (
@@ -96,7 +90,6 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
             </p>
           </div>
           <div>
-            {/* AQUI A MUDANÇA DE COR DO BOTÃO */}
             <Link
               href="/romaneios/novo"
               className="rounded-md bg-osirnet-dark-blue px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90"
@@ -106,10 +99,11 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
           </div>
         </div>
         
-        <FilterControls />
+        {/* Passamos o status atual para os controles de filtro */}
+        <FilterControls currentStatus={searchParams.status} />
   
         <RomaneiosTable 
-          romaneios={romaneios as any} 
+          romaneios={romaneiosFromDb as any} 
           baseUrl={baseUrl} 
           currentPage={page}
           totalPages={totalPages}
