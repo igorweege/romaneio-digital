@@ -1,4 +1,4 @@
-// components/Header.tsx - VERSÃO COM TEMA OSIRNET
+// components/Header.tsx - VERSÃO COM HEADER AMARELO
 
 'use client';
 
@@ -12,36 +12,41 @@ export default function Header() {
   const user = session?.user;
   const pathname = usePathname();
 
-  if (status === 'loading' || !session) {
-    // Retorna um header vazio enquanto carrega ou se não há sessão,
-    // para manter o espaço na página sem mostrar conteúdo.
-    return <header className="h-16 bg-osirnet-dark-blue" />;
+  if (status === 'loading') {
+    // Esqueleto de loading para evitar "pulo" na tela
+    return <header className="h-16 bg-white shadow-sm" />;
   }
-  
+
+  if (!session) {
+    return null;
+  }
+
   return (
-    <header className="bg-osirnet-dark-blue text-white shadow-md">
+    // FUNDO DO HEADER ATUALIZADO PARA AMARELO
+    <header className="bg-osirnet-yellow shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between">
           <div className="flex">
             <div className="flex flex-shrink-0 items-center">
               <Link href="/dashboard">
                 <Image
-                  className="h-8 w-auto"
+                  className="h-10 w-auto" // AUMENTEI A ALTURA
                   src="/logo-osirnet.png"
                   alt="Logo Osirnet"
-                  width={140}
-                  height={32}
+                  width={175} // AUMENTEI A LARGURA
+                  height={40}
                   priority
                 />
               </Link>
             </div>
+            {/* TEXTOS E BORDAS DOS LINKS ATUALIZADOS PARA O AZUL ESCURO */}
             <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
               <Link
                 href="/dashboard"
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
                   pathname === '/dashboard'
-                    ? 'border-osirnet-yellow text-white'
-                    : 'border-transparent text-gray-300 hover:border-gray-400 hover:text-white'
+                    ? 'border-osirnet-dark-blue text-osirnet-dark-blue'
+                    : 'border-transparent text-gray-700 hover:border-gray-400 hover:text-osirnet-dark-blue'
                 }`}
               >
                 Dashboard
@@ -50,8 +55,8 @@ export default function Header() {
                 href="/romaneios"
                 className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
                   pathname.startsWith('/romaneios')
-                    ? 'border-osirnet-yellow text-white'
-                    : 'border-transparent text-gray-300 hover:border-gray-400 hover:text-white'
+                    ? 'border-osirnet-dark-blue text-osirnet-dark-blue'
+                    : 'border-transparent text-gray-700 hover:border-gray-400 hover:text-osirnet-dark-blue'
                 }`}
               >
                 Romaneios
@@ -61,8 +66,8 @@ export default function Header() {
                   href="/admin"
                   className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
                     pathname.startsWith('/admin')
-                      ? 'border-osirnet-yellow text-white'
-                      : 'border-transparent text-gray-300 hover:border-gray-400 hover:text-white'
+                      ? 'border-osirnet-dark-blue text-osirnet-dark-blue'
+                      : 'border-transparent text-gray-700 hover:border-gray-400 hover:text-osirnet-dark-blue'
                   }`}
                 >
                   Admin
@@ -71,7 +76,7 @@ export default function Header() {
             </div>
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
-             <span className="text-sm text-gray-200 mr-4">
+             <span className="text-sm text-osirnet-dark-blue mr-4">
                 Olá, {user?.name}
              </span>
              <button

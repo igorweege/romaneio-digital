@@ -1,4 +1,4 @@
-// app/dashboard/page.tsx - VERSÃO COM BOTÃO AMARELO
+// app/dashboard/page.tsx - VERSÃO COM BOTÃO AZUL
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -8,7 +8,6 @@ import Link from 'next/link';
 import RomaneiosTable from '@/components/RomaneiosTable';
 
 export default async function Dashboard() {
-  // ... (código de busca de dados continua o mesmo)
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -16,12 +15,8 @@ export default async function Dashboard() {
   }
 
   const romaneios = await prisma.romaneio.findMany({
-    where: {
-      authorId: session.user.id,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
+    where: { authorId: session.user.id },
+    orderBy: { createdAt: 'desc' },
     take: 10,
     include: { author: { select: { name: true } } },
   });
@@ -38,10 +33,10 @@ export default async function Dashboard() {
           </p>
         </div>
         <div>
-          {/* BOTÃO ATUALIZADO PARA A COR DA MARCA */}
+          {/* BOTÃO ATUALIZADO PARA A COR AZUL ESCURO */}
           <Link
             href="/romaneios/novo"
-            className="rounded-md bg-osirnet-yellow px-4 py-2 text-sm font-semibold text-osirnet-dark-blue shadow-sm hover:bg-opacity-90"
+            className="rounded-md bg-osirnet-dark-blue px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90"
           >
             Adicionar Novo Romaneio
           </Link>

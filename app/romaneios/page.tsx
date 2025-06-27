@@ -1,4 +1,4 @@
-// app/romaneios/page.tsx - VERSÃO COM LÓGICA DE PAGINAÇÃO
+// app/romaneios/page.tsx - VERSÃO CORRETA E VALIDADA
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -13,7 +13,7 @@ interface RomaneiosPageProps {
     search?: string;
     startDate?: string;
     endDate?: string;
-    page?: string; // Parâmetro para a página atual
+    page?: string;
   };
 }
 
@@ -24,9 +24,8 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
     redirect('/login');
   }
 
-  // Lógica de Paginação
   const page = Number(searchParams.page) || 1;
-  const pageSize = 25; // 25 itens por página
+  const pageSize = 25;
   const skip = (page - 1) * pageSize;
 
   const whereClause: any = {};
@@ -57,7 +56,6 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
     };
   }
 
-  // Fazemos duas buscas: uma para os dados da página e outra para a contagem total
   const romaneiosFromDb = await prisma.romaneio.findMany({
     where: whereClause,
     orderBy: {
@@ -77,6 +75,7 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
   const totalRomaneios = await prisma.romaneio.count({ where: whereClause });
   const totalPages = Math.ceil(totalRomaneios / pageSize);
 
+  // Mapeamento para garantir que os dados são serializáveis
   const romaneios = romaneiosFromDb.map(romaneio => ({
     ...romaneio,
     createdAt: romaneio.createdAt.toISOString(),
@@ -87,33 +86,35 @@ export default async function RomaneiosPage({ searchParams }: RomaneiosPageProps
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
   return (
-    <div className="p-4 sm:p-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Arquivo Geral de Romaneios</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Pesquise e gerencie todos os romaneios do sistema.
-          </p>
+    <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">Arquivo Geral de Romaneios</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Pesquise e gerencie todos os romaneios do sistema.
+            </p>
+          </div>
+          <div>
+            {/* AQUI A MUDANÇA DE COR DO BOTÃO */}
+            <Link
+              href="/romaneios/novo"
+              className="rounded-md bg-osirnet-dark-blue px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90"
+            >
+              Adicionar Novo Romaneio
+            </Link>
+          </div>
         </div>
-        <div>
-          <Link
-            href="/romaneios/novo"
-            className="rounded-md bg-osirnet-blue px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-90"
-          >
-            Adicionar Novo Romaneio
-          </Link>
-        </div>
+        
+        <FilterControls />
+  
+        <RomaneiosTable 
+          romaneios={romaneios as any} 
+          baseUrl={baseUrl} 
+          currentPage={page}
+          totalPages={totalPages}
+        />
       </div>
-      
-      <FilterControls />
-
-      <RomaneiosTable 
-        romaneios={romaneios as any} 
-        baseUrl={baseUrl} 
-        currentPage={page}
-        totalPages={totalPages}
-      />
-
     </div>
   );
 }
