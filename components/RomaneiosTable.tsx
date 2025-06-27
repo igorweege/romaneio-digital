@@ -1,4 +1,4 @@
-// components/RomaneiosTable.tsx - VERSÃO COM BOTÃO DE DOWNLOAD
+// components/RomaneiosTable.tsx - VERSÃO COM AÇÕES CORRIGIDAS E ESTILIZADAS
 
 'use client';
 
@@ -9,6 +9,7 @@ import Modal from '@/components/Modal';
 import QRCode from 'qrcode.react';
 import PaginationControls from './PaginationControls';
 
+// O tipo agora precisa incluir o objeto aninhado 'author'
 type RomaneioWithAuthor = Romaneio & {
   author: {
     name: string | null;
@@ -100,20 +101,25 @@ export default function RomaneiosTable({ romaneios, baseUrl, currentPage, totalP
                           </span>
                         )}
                       </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                      {/* LÓGICA DE AÇÕES CORRIGIDA */}
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 space-x-4">
                         {romaneio.fileUrl && (
                           <>
-                            <a href={romaneio.fileUrl} target="_blank" rel="noopener noreferrer" className="text-osirnet-light-blue hover:text-osirnet-blue hover:underline">
+                            <a href={romaneio.fileUrl} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-osirnet-dark-blue hover:underline">
                               Visualizar
                             </a>
-                            {/* NOVO BOTÃO DE DOWNLOAD */}
-                            <a href={romaneio.fileUrl} download={romaneio.fileName} className="ml-4 text-osirnet-light-blue hover:text-osirnet-blue hover:underline">
+                            <a href={romaneio.fileUrl} download={romaneio.fileName} className="text-gray-600 hover:text-osirnet-dark-blue hover:underline">
                               Baixar
                             </a>
                           </>
                         )}
                         {!romaneio.isSigned && romaneio.signatureToken && (
-                          <CopyLinkButton link={getSignatureLink(romaneio.signatureToken)} />
+                          <>
+                            <CopyLinkButton link={getSignatureLink(romaneio.signatureToken)} />
+                            <button onClick={() => setSelectedRomaneio(romaneio)} className="text-gray-600 hover:text-osirnet-dark-blue hover:underline">
+                              QR Code
+                            </button>
+                          </>
                         )}
                       </td>
                     </tr>
