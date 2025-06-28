@@ -1,4 +1,4 @@
-// app/admin/editar/[id]/page.tsx - VERSÃO COM NOTIFICAÇÕES TOAST
+// app/admin/editar/[id]/page.tsx - VERSÃO FINAL COM TOAST
 
 'use client';
 
@@ -22,9 +22,12 @@ export default function EditUserPage({ params }: EditUserPageProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   
   const [isLoading, setIsLoading] = useState(true);
+  // O estado de erro local não é mais necessário
+  // const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchUser = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch(`/api/users/${params.id}`);
         if (!response.ok) {
@@ -35,7 +38,7 @@ export default function EditUserPage({ params }: EditUserPageProps) {
         setName(userData.name);
         setRole(userData.role);
       } catch (err: any) {
-        toast.error(err.message);
+        toast.error(err.message); // Usamos toast para erro no fetch
       } finally {
         setIsLoading(false);
       }
@@ -46,9 +49,13 @@ export default function EditUserPage({ params }: EditUserPageProps) {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (password !== confirmPassword) {
+    if (password && password !== confirmPassword) {
       toast.error('As senhas não coincidem.');
       return;
+    }
+    if (password && password.length < 6) {
+        toast.error('A nova senha deve ter no mínimo 6 caracteres.');
+        return;
     }
 
     setIsLoading(true);
@@ -70,18 +77,17 @@ export default function EditUserPage({ params }: EditUserPageProps) {
       });
 
       const responseData = await response.json();
-
       if (!response.ok) {
         throw new Error(responseData.error || 'Falha ao atualizar o usuário.');
       }
       
-      // 2. Substituímos o alert()
+      // 2. Substituímos o alert() por toast.success()
       toast.success('Usuário atualizado com sucesso!');
       router.push('/admin');
       router.refresh();
 
     } catch (err: any) {
-      // 3. Usamos toast.error() para erros
+      // 3. Usamos toast.error() para todos os erros
       toast.error(err.message);
     } finally {
       setIsLoading(false);
@@ -89,13 +95,16 @@ export default function EditUserPage({ params }: EditUserPageProps) {
   };
 
   if (isLoading) return <p className="text-center p-8">Carregando...</p>;
-  if (!user) return <p className="text-center p-8 text-red-600">Erro ao carregar usuário.</p>
+  if (!user) return <p className="text-center p-8 text-red-600">Erro ao carregar usuário ou usuário não encontrado.</p>;
 
   return (
     <div className="p-4 sm:p-8">
       <div className="bg-white p-6 rounded-lg shadow-sm max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Editar Usuário</h1>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* ... (código dos campos do formulário continua o mesmo) ... */}
+          {/* ... o campo de erro {error && <p>...</p>} foi removido ... */}
+          {/* Campo Nome */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium leading-6 text-gray-900">Nome</label>
             <div className="mt-2">
@@ -110,6 +119,7 @@ export default function EditUserPage({ params }: EditUserPageProps) {
             </div>
           </div>
 
+          {/* Campo Email */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">Email</label>
             <div className="mt-2">
@@ -123,6 +133,7 @@ export default function EditUserPage({ params }: EditUserPageProps) {
             </div>
           </div>
           
+          {/* Campo Role */}
           <div>
             <label htmlFor="role" className="block text-sm font-medium leading-6 text-gray-900">Permissão</label>
             <div className="mt-2">
@@ -138,6 +149,7 @@ export default function EditUserPage({ params }: EditUserPageProps) {
             </div>
           </div>
           
+          {/* Seção de Senha */}
           <div className="border-t pt-6 mt-6">
              <h2 className="text-lg font-medium text-gray-700">Alterar Senha</h2>
              <p className="text-sm text-gray-500">Deixe em branco para não alterar a senha atual.</p>
@@ -168,6 +180,8 @@ export default function EditUserPage({ params }: EditUserPageProps) {
               />
             </div>
           </div>
+
+          {/* O campo de erro foi removido daqui */}
 
           <div className="flex items-center justify-end gap-x-4 border-t pt-6">
             <button type="button" onClick={() => router.push('/admin')} disabled={isLoading} className="text-sm font-semibold leading-6 text-gray-900">
