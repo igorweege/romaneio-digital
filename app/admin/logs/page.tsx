@@ -1,4 +1,4 @@
-// app/admin/logs/page.tsx - Layout Unificado
+// app/admin/logs/page.tsx - VERSÃO RESPONSIVA
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -24,12 +24,18 @@ export default async function LogsPage({ searchParams }: LogsPageProps) {
   const skip = (page - 1) * pageSize;
 
   const logs = await prisma.logEntry.findMany({
-    orderBy: { createdAt: 'desc' },
+    orderBy: {
+      createdAt: 'desc',
+    },
     skip: skip,
     take: pageSize,
     include: {
-      user: { select: { name: true } },
-      romaneio: { select: { nomeCompleto: true } }
+      user: {
+        select: { name: true },
+      },
+      romaneio: {
+        select: { nomeCompleto: true }
+      }
     },
   });
 
@@ -46,54 +52,79 @@ export default async function LogsPage({ searchParams }: LogsPageProps) {
           </p>
         </div>
 
-        <div className="mt-6 flow-root">
-          <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead>
-                  <tr>
-                    <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
-                      Data / Hora
-                    </th>
-                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Evento
-                    </th>
-                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Usuário
-                    </th>
-                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Romaneio Associado
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {logs.map((log) => (
-                    <tr key={log.id}>
-                      <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">
-                        {new Date(log.createdAt).toLocaleString('pt-BR')}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
-                        {log.message}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {log.user?.name || 'Sistema'}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {log.romaneio?.nomeCompleto || 'N/A'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="flow-root">
+            {/* Visualização em Cards para Mobile */}
+            <div className="block md:hidden">
+              <div className="space-y-3">
+                {logs.map((log) => (
+                  <div key={log.id} className="bg-gray-50 p-4 rounded-md shadow-sm">
+                    <p className="font-medium text-gray-800 break-words">{log.message}</p>
+                    <div className="mt-2 text-xs text-gray-500">
+                      <p>
+                        <strong>Usuário:</strong> {log.user?.name || 'Sistema'}
+                      </p>
+                      <p>
+                        <strong>Data:</strong> {new Date(log.createdAt).toLocaleString('pt-BR')}
+                      </p>
+                       {log.romaneio?.nomeCompleto && (
+                        <p>
+                          <strong>Romaneio:</strong> {log.romaneio.nomeCompleto}
+                        </p>
+                       )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+
+            {/* Visualização em Tabela para Desktop */}
+            <div className="hidden md:block -mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                    <table className="min-w-full divide-y divide-gray-300">
+                    <thead>
+                        <tr>
+                        <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
+                            Data / Hora
+                        </th>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                            Evento
+                        </th>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                            Usuário
+                        </th>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                            Romaneio Associado
+                        </th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white">
+                        {logs.map((log) => (
+                        <tr key={log.id}>
+                            <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">
+                            {new Date(log.createdAt).toLocaleString('pt-BR')}
+                            </td>
+                            <td className="py-4 px-3 text-sm text-gray-800 max-w-sm break-words">
+                            {log.message}
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                            {log.user?.name || 'Sistema'}
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                            {log.romaneio?.nomeCompleto || 'N/A'}
+                            </td>
+                        </tr>
+                        ))}
+                    </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
         
         {totalPages > 1 && (
-          <PaginationControls 
+            <PaginationControls 
             currentPage={page} 
             totalPages={totalPages} 
-          />
+            />
         )}
       </div>
     </div>
