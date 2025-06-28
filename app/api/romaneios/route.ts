@@ -1,11 +1,11 @@
-// app/api/romaneios/route.ts - VERSÃO COM LOGGING
+// app/api/romaneios/route.ts - VERSÃO COM LOGGING DE AÇÃO
 
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { UploadClient } from '@uploadcare/upload-client';
-import { createLogEntry } from '@/lib/logging'; // 1. Importamos nossa função de log
+import { createLogEntry } from '@/lib/logging';
 
 const uploadClient = new UploadClient({
   publicKey: process.env.UPLOADCARE_PUBLIC_KEY || '',
@@ -19,7 +19,6 @@ export async function POST(request: Request) {
 
   try {
     const formData = await request.formData();
-
     const file = formData.get('file') as File | null;
     const nomeCompleto = formData.get('nomeCompleto') as string | null;
     const cpf = formData.get('cpf') as string | null;
@@ -53,15 +52,14 @@ export async function POST(request: Request) {
       },
     });
 
-    // 2. Registramos o evento de criação no log
     await createLogEntry({
       userId: session.user.id,
       romaneioId: novoRomaneio.id,
       message: `Usuário '${session.user.name}' criou o romaneio para '${novoRomaneio.nomeCompleto}'.`,
+      action: 'ROMANEIO_CREATED',
     });
 
     return NextResponse.json(novoRomaneio, { status: 201 });
-
   } catch (error) {
     console.error("Falha ao criar romaneio com upload:", error);
     const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';

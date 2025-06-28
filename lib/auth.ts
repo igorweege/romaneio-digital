@@ -1,13 +1,12 @@
-// lib/auth.ts - VERSÃO COM LOG DE LOGIN
+// lib/auth.ts - VERSÃO COM LOGGING DE AÇÃO
 
 import { NextAuthOptions } from 'next-auth';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import prisma from './prisma';
 import bcrypt from 'bcryptjs';
-import { createLogEntry } from './logging'; // Importamos nossa função de log
+import { createLogEntry } from './logging';
 
-// Adicionamos as tipagens para o que queremos no token e na sessão
 declare module 'next-auth' {
   interface Session {
     user: {
@@ -39,24 +38,19 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) {
           throw new Error('Credenciais inválidas.');
         }
-
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         });
-
         if (!user || !user.password) {
           throw new Error('Usuário não encontrado.');
         }
-
         const isPasswordValid = await bcrypt.compare(
           credentials.password,
           user.password
         );
-
         if (!isPasswordValid) {
           throw new Error('Senha incorreta.');
         }
-
         return {
           id: user.id,
           name: user.name,
@@ -85,19 +79,17 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-
-  // NOVO BLOCO DE EVENTOS ADICIONADO AQUI
   events: {
     async signIn(message) {
       if (message.user) {
         await createLogEntry({
           userId: message.user.id,
-          message: `Usuário '${message.user.name}' fez login no sistema.`
+          message: `Usuário '${message.user.name}' fez login no sistema.`,
+          action: 'USER_LOGIN',
         });
       }
     }
   },
-
   pages: {
     signIn: '/login',
   },

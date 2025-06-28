@@ -1,11 +1,13 @@
-// lib/logging.ts
+// lib/logging.ts - VERSÃO CORRIGIDA
 
 import prisma from './prisma';
+import type { LogAction } from '@prisma/client';
 
 interface LogData {
   message: string;
   userId?: string;
   romaneioId?: string;
+  action: LogAction; // Ação agora é um campo obrigatório do tipo LogAction
 }
 
 /**
@@ -14,16 +16,23 @@ interface LogData {
  */
 export async function createLogEntry(logData: LogData): Promise<void> {
   try {
+    // Construímos o objeto de dados dinamicamente
+    const data: any = {
+      message: logData.message,
+      action: logData.action,
+    };
+
+    if (logData.userId) {
+      data.userId = logData.userId;
+    }
+    if (logData.romaneioId) {
+      data.romaneioId = logData.romaneioId;
+    }
+
     await prisma.logEntry.create({
-      data: {
-        message: logData.message,
-        userId: logData.userId,
-        romaneioId: logData.romaneioId,
-      },
+      data: data,
     });
   } catch (error) {
-    // Se a criação do log falhar, apenas registramos o erro no console
-    // para não quebrar a funcionalidade principal que o usuário está executando.
     console.error("Falha ao criar entrada de log:", error);
   }
 }

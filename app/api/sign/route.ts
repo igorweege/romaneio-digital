@@ -1,11 +1,11 @@
-// app/api/sign/route.ts - VERSÃO COM LOGGING
+// app/api/sign/route.ts - VERSÃO COM LOGGING DE AÇÃO
 
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { UploadClient } from '@uploadcare/upload-client';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import { createLogEntry } from '@/lib/logging'; // 1. Importamos nossa função de log
+import { createLogEntry } from '@/lib/logging';
 
 const uploadClient = new UploadClient({
   publicKey: process.env.UPLOADCARE_PUBLIC_KEY || '',
@@ -67,8 +67,13 @@ export async function POST(request: Request) {
 
     const signedPdfBytes = await pdfDoc.save();
     const signedPdfBuffer = Buffer.from(signedPdfBytes);
-    const newFileName = `assinado-${romaneio.fileName}`;
     
+    const now = new Date();
+    const dateString = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+    const timeString = `${now.getHours().toString().padStart(2, '0')}-${now.getMinutes().toString().padStart(2, '0')}-${now.getSeconds().toString().padStart(2, '0')}`;
+    const sanitizedName = romaneio.nomeCompleto.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+    const newFileName = `${sanitizedName}_${dateString}_${timeString}.pdf`;
+
     const signedPdfUploadResult = await uploadClient.uploadFile(signedPdfBuffer, {
       fileName: newFileName,
       contentType: 'application/pdf',
@@ -78,9 +83,7 @@ export async function POST(request: Request) {
       throw new Error('Falha no upload do PDF assinado.');
     }
 
-    // Primeiro, fazemos o upload da imagem da assinatura para ter a URL
     const signatureUploadResult = await uploadClient.uploadFile(Buffer.from(signatureImage.split(',')[1], 'base64'));
-    
     if(!signatureUploadResult?.cdnUrl) {
         throw new Error('Falha no upload da imagem da assinatura.');
     }
@@ -98,10 +101,10 @@ export async function POST(request: Request) {
       },
     });
 
-    // 2. Registramos o evento de assinatura no log
     await createLogEntry({
       romaneioId: updatedRomaneio.id,
       message: `O romaneio para '${updatedRomaneio.nomeCompleto}' foi assinado.`,
+      action: 'ROMANEIO_SIGNED',
     });
 
     return NextResponse.json(updatedRomaneio, { status: 200 });
