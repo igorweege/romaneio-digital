@@ -1,11 +1,10 @@
-// components/FilterControls.tsx - VERSÃO COM FILTRO DE STATUS
+// components/FilterControls.tsx - VERSÃO RESPONSIVA
 
 'use client';
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useState, FormEvent } from 'react';
 
-// O componente agora recebe o status atual como propriedade
 interface FilterControlsProps {
     currentStatus?: string;
 }
@@ -37,7 +36,6 @@ export default function FilterControls({ currentStatus }: FilterControlsProps) {
     } else {
       params.delete('endDate');
     }
-    // Ao filtrar, resetamos para a primeira página
     params.set('page', '1');
     router.push(`${pathname}?${params.toString()}`);
   };
@@ -46,7 +44,6 @@ export default function FilterControls({ currentStatus }: FilterControlsProps) {
     router.push(pathname);
   };
 
-  // --- NOVA FUNÇÃO PARA MUDAR O STATUS ---
   const handleStatusChange = (status: 'ALL' | 'PENDING' | 'SIGNED') => {
       const params = new URLSearchParams(searchParams.toString());
       if (status === 'ALL') {
@@ -54,14 +51,12 @@ export default function FilterControls({ currentStatus }: FilterControlsProps) {
       } else {
           params.set('status', status);
       }
-      // Ao mudar o status, resetamos para a primeira página
       params.set('page', '1');
       router.push(`${pathname}?${params.toString()}`);
   }
 
   return (
     <div className="p-4 bg-gray-50 rounded-lg border mb-6">
-        {/* --- NOVA SEÇÃO DE BOTÕES DE STATUS --- */}
         <div className="mb-4 border-b border-gray-200">
             <nav className="-mb-px flex space-x-6" aria-label="Tabs">
                 <button
@@ -90,11 +85,11 @@ export default function FilterControls({ currentStatus }: FilterControlsProps) {
                 </button>
             </nav>
         </div>
-        {/* --- FIM DA SEÇÃO DE STATUS --- */}
 
       <form onSubmit={handleFilter}>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-          <div className="md:col-span-2">
+        {/* CLASSE GRID ATUALIZADA PARA SER RESPONSIVA */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+          <div className="lg:col-span-2">
             <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
               Buscar por Nome
             </label>
@@ -133,11 +128,11 @@ export default function FilterControls({ currentStatus }: FilterControlsProps) {
             />
           </div>
         </div>
-        <div className="mt-4 flex justify-end gap-x-3">
+        <div className="mt-4 flex flex-col sm:flex-row justify-end gap-x-3 gap-y-2">
           <button
               type="button"
               onClick={handleClear}
-              className="text-sm font-semibold text-gray-600 hover:text-gray-900"
+              className="text-sm font-semibold text-gray-600 hover:text-gray-900 rounded-md py-2 px-4 bg-gray-200 sm:bg-transparent"
           >
               Limpar Tudo
           </button>
