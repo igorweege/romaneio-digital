@@ -1,4 +1,4 @@
-// app/api/users/[id]/route.ts - VERSÃO COM LOG DE AÇÃO CORRIGIDO
+// app/api/users/[id]/route.ts - VERSÃO COM GET E PATCH
 
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
@@ -8,6 +8,38 @@ import { z } from 'zod';
 import { createLogEntry } from '@/lib/logging';
 import bcrypt from 'bcryptjs';
 
+// ---- NOVA FUNÇÃO GET ----
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const session = await getServerSession(authOptions);
+  
+  if (!session || session.user.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Não autorizado.' }, { status: 403 });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
+    }
+
+    // Remove a senha do objeto antes de enviar como resposta
+    const { password, ...userWithoutPassword } = user;
+    return NextResponse.json(userWithoutPassword);
+
+  } catch (error) {
+    console.error("Falha ao buscar usuário:", error);
+    return NextResponse.json({ error: 'Erro ao buscar dados do usuário.' }, { status: 500 });
+  }
+}
+
+
+// ---- FUNÇÃO PATCH QUE JÁ TÍNHAMOS ----
 const updateUserSchema = z.object({
   name: z.string().min(1, 'O nome é obrigatório.'),
   role: z.enum(['USER', 'ADMIN']),
@@ -58,27 +90,25 @@ export async function PATCH(
       data: dataToUpdate,
     });
     
-    // --- LÓGICA DE LOG CORRIGIDA ---
     if (userBeforeUpdate.role !== updatedUser.role) {
       await createLogEntry({
         userId: session.user.id,
         message: `Alterou a permissão do usuário '${updatedUser.name}' de '${userBeforeUpdate.role}' para '${updatedUser.role}'.`,
-        action: 'USER_ROLE_CHANGED' // Ação de mudança de permissão
+        action: 'USER_ROLE_CHANGED'
       });
     } else if (password) {
         await createLogEntry({
             userId: session.user.id,
             message: `Alterou a senha do usuário '${updatedUser.name}'.`,
-            action: 'USER_UPDATED' // Ação de atualização
+            action: 'USER_UPDATED'
         });
     } else {
        await createLogEntry({
         userId: session.user.id,
         message: `Atualizou os dados do usuário '${updatedUser.name}'.`,
-        action: 'USER_UPDATED' // Ação de atualização
+        action: 'USER_UPDATED'
       });
     }
-    // --- FIM DA LÓGICA DE LOG ---
     
     return NextResponse.json(updatedUser, { status: 200 });
 

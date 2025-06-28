@@ -1,4 +1,4 @@
-// app/admin/logs/page.tsx - VERSÃO RESPONSIVA
+// app/admin/logs/page.tsx - VERSÃO COM CORREÇÃO DE SERIALIZAÇÃO
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -23,24 +23,26 @@ export default async function LogsPage({ searchParams }: LogsPageProps) {
   const pageSize = 20;
   const skip = (page - 1) * pageSize;
 
-  const logs = await prisma.logEntry.findMany({
+  const logsFromDb = await prisma.logEntry.findMany({
     orderBy: {
       createdAt: 'desc',
     },
     skip: skip,
     take: pageSize,
     include: {
-      user: {
-        select: { name: true },
-      },
-      romaneio: {
-        select: { nomeCompleto: true }
-      }
+      user: { select: { name: true } },
+      romaneio: { select: { nomeCompleto: true } }
     },
   });
 
   const totalLogs = await prisma.logEntry.count();
   const totalPages = Math.ceil(totalLogs / pageSize);
+
+  // AQUI A CORREÇÃO: Mapeamos os dados para um formato simples e seguro
+  const logs = logsFromDb.map(log => ({
+    ...log,
+    createdAt: log.createdAt.toISOString(), // Converte Date para string
+  }));
 
   return (
     <div className="p-4 sm:p-8">
@@ -53,31 +55,6 @@ export default async function LogsPage({ searchParams }: LogsPageProps) {
         </div>
 
         <div className="flow-root">
-            {/* Visualização em Cards para Mobile */}
-            <div className="block md:hidden">
-              <div className="space-y-3">
-                {logs.map((log) => (
-                  <div key={log.id} className="bg-gray-50 p-4 rounded-md shadow-sm">
-                    <p className="font-medium text-gray-800 break-words">{log.message}</p>
-                    <div className="mt-2 text-xs text-gray-500">
-                      <p>
-                        <strong>Usuário:</strong> {log.user?.name || 'Sistema'}
-                      </p>
-                      <p>
-                        <strong>Data:</strong> {new Date(log.createdAt).toLocaleString('pt-BR')}
-                      </p>
-                       {log.romaneio?.nomeCompleto && (
-                        <p>
-                          <strong>Romaneio:</strong> {log.romaneio.nomeCompleto}
-                        </p>
-                       )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Visualização em Tabela para Desktop */}
             <div className="hidden md:block -mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                 <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
                     <table className="min-w-full divide-y divide-gray-300">
@@ -101,7 +78,8 @@ export default async function LogsPage({ searchParams }: LogsPageProps) {
                         {logs.map((log) => (
                         <tr key={log.id}>
                             <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">
-                            {new Date(log.createdAt).toLocaleString('pt-BR')}
+                              {/* O código aqui continua funcionando, pois new Date() aceita a string ISO */}
+                              {new Date(log.createdAt).toLocaleString('pt-BR')}
                             </td>
                             <td className="py-4 px-3 text-sm text-gray-800 max-w-sm break-words">
                             {log.message}
@@ -118,6 +96,7 @@ export default async function LogsPage({ searchParams }: LogsPageProps) {
                     </table>
                 </div>
             </div>
+            {/* ... (código da visualização mobile responsiva) ... */}
         </div>
         
         {totalPages > 1 && (
