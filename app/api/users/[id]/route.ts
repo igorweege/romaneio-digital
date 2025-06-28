@@ -1,4 +1,4 @@
-// app/api/users/[id]/route.ts - VERSÃO COM ATUALIZAÇÃO DE SENHA
+// app/api/users/[id]/route.ts - VERSÃO COM LOG DE AÇÃO CORRIGIDO
 
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
@@ -6,13 +6,12 @@ import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { createLogEntry } from '@/lib/logging';
-import bcrypt from 'bcryptjs'; // Importamos o bcrypt para a senha
+import bcrypt from 'bcryptjs';
 
-// Schema agora inclui um campo de senha opcional
 const updateUserSchema = z.object({
   name: z.string().min(1, 'O nome é obrigatório.'),
   role: z.enum(['USER', 'ADMIN']),
-  password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres.').optional(),
+  password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres.').optional().or(z.literal('')),
 });
 
 export async function PATCH(
@@ -44,42 +43,42 @@ export async function PATCH(
         return NextResponse.json({ error: 'Usuário não encontrado.' }, { status: 404 });
     }
 
-    // Prepara os dados para atualização
     const dataToUpdate: { name: string; role: 'USER' | 'ADMIN'; password?: string } = {
       name,
       role,
     };
 
-    // --- NOVA LÓGICA DE SENHA ---
-    // Se uma nova senha foi fornecida, criptografa e adiciona aos dados a serem atualizados
     if (password) {
       const hashedPassword = await bcrypt.hash(password, 10);
       dataToUpdate.password = hashedPassword;
     }
-    // --- FIM DA LÓGICA DE SENHA ---
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: dataToUpdate,
     });
     
-    // Lógica de Log
+    // --- LÓGICA DE LOG CORRIGIDA ---
     if (userBeforeUpdate.role !== updatedUser.role) {
       await createLogEntry({
         userId: session.user.id,
-        message: `Alterou a permissão do usuário '${updatedUser.name}' de '${userBeforeUpdate.role}' para '${updatedUser.role}'.`
+        message: `Alterou a permissão do usuário '${updatedUser.name}' de '${userBeforeUpdate.role}' para '${updatedUser.role}'.`,
+        action: 'USER_ROLE_CHANGED' // Ação de mudança de permissão
       });
     } else if (password) {
         await createLogEntry({
             userId: session.user.id,
-            message: `Alterou a senha do usuário '${updatedUser.name}'.`
+            message: `Alterou a senha do usuário '${updatedUser.name}'.`,
+            action: 'USER_UPDATED' // Ação de atualização
         });
     } else {
        await createLogEntry({
         userId: session.user.id,
-        message: `Atualizou os dados do usuário '${updatedUser.name}'.`
+        message: `Atualizou os dados do usuário '${updatedUser.name}'.`,
+        action: 'USER_UPDATED' // Ação de atualização
       });
     }
+    // --- FIM DA LÓGICA DE LOG ---
     
     return NextResponse.json(updatedUser, { status: 200 });
 
