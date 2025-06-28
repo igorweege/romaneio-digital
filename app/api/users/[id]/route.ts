@@ -1,4 +1,4 @@
-// app/api/users/[id]/route.ts - VERSÃO COM GET E PATCH
+// app/api/users/[id]/route.ts - VERSÃO COM GET, PATCH E DELETE (COM LOG)
 
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { createLogEntry } from '@/lib/logging';
 import bcrypt from 'bcryptjs';
 
-// ---- NOVA FUNÇÃO GET ----
+// ---- FUNÇÃO GET (EXISTENTE) ----
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -28,7 +28,6 @@ export async function GET(
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
 
-    // Remove a senha do objeto antes de enviar como resposta
     const { password, ...userWithoutPassword } = user;
     return NextResponse.json(userWithoutPassword);
 
@@ -38,8 +37,7 @@ export async function GET(
   }
 }
 
-
-// ---- FUNÇÃO PATCH QUE JÁ TÍNHAMOS ----
+// ---- FUNÇÃO PATCH (EXISTENTE) ----
 const updateUserSchema = z.object({
   name: z.string().min(1, 'O nome é obrigatório.'),
   role: z.enum(['USER', 'ADMIN']),
@@ -115,5 +113,51 @@ export async function PATCH(
   } catch (error) {
     console.error("Falha ao atualizar usuário:", error);
     return NextResponse.json({ error: 'Falha ao atualizar usuário no banco de dados.' }, { status: 500 });
+  }
+}
+
+
+// ---- NOVA FUNÇÃO DELETE ----
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const session = await getServerSession(authOptions);
+
+  if (!session || session.user.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Não autorizado.' }, { status: 403 });
+  }
+
+  const userIdToDelete = params.id;
+
+  if (userIdToDelete === session.user.id) {
+    return NextResponse.json({ error: 'Você não pode excluir sua própria conta.' }, { status: 400 });
+  }
+
+  try {
+    const userToDelete = await prisma.user.findUnique({
+      where: { id: userIdToDelete },
+    });
+
+    if (!userToDelete) {
+      return NextResponse.json({ error: 'Usuário não encontrado.' }, { status: 404 });
+    }
+    
+    await prisma.user.delete({
+      where: { id: userIdToDelete },
+    });
+
+    // AQUI A ADIÇÃO DO LOG
+    await createLogEntry({
+      userId: session.user.id,
+      message: `Excluiu o usuário '${userToDelete.name}' (${userToDelete.email}).`,
+      action: 'USER_UPDATED' // Usamos a ação genérica de 'UPDATE' para exclusão
+    });
+
+    return NextResponse.json({ message: 'Usuário excluído com sucesso.' }, { status: 200 });
+
+  } catch (error) {
+    console.error("Falha ao excluir usuário:", error);
+    return NextResponse.json({ error: 'Falha ao excluir o usuário.' }, { status: 500 });
   }
 }
