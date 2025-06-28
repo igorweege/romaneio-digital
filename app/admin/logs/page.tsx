@@ -1,55 +1,56 @@
-// app/admin/logs/page.tsx - VERSÃO FINAL E FUNCIONAL
+// app/admin/logs/page.tsx - VERSÃO FINAL COM FILTROS
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import PaginationControls from '@/components/PaginationControls';
+import LogFilterControls from '@/components/LogFilterControls';
+import { LogAction } from '@prisma/client';
 
 interface LogsPageProps {
   searchParams: {
     page?: string;
+    action?: string;
   };
 }
 
 export default async function LogsPage({ searchParams }: LogsPageProps) {
   const session = await getServerSession(authOptions);
 
-  // Proteção: Apenas Admins podem acessar esta página
   if (!session || session.user.role !== 'ADMIN') {
     redirect('/dashboard');
   }
 
   const page = Number(searchParams.page) || 1;
-  const pageSize = 20; // 20 logs por página
+  const pageSize = 20;
   const skip = (page - 1) * pageSize;
 
-  // Busca os logs do banco de dados com paginação e incluindo dados relacionados
+  const whereClause: any = {};
+
+  // Adiciona a lógica de filtro pela ação vinda da URL
+  if (searchParams.action && Object.values(LogAction).includes(searchParams.action as LogAction)) {
+    whereClause.action = searchParams.action as LogAction;
+  }
+
   const logsFromDb = await prisma.logEntry.findMany({
-    orderBy: {
-      createdAt: 'desc',
-    },
+    where: whereClause,
+    orderBy: { createdAt: 'desc' },
     skip: skip,
     take: pageSize,
     include: {
-      user: {
-        select: { name: true }, // Inclui o nome do usuário que gerou o log
-      },
-      romaneio: {
-        select: { nomeCompleto: true } // Inclui o nome do solicitante do romaneio
-      }
+      user: { select: { name: true } },
+      romaneio: { select: { nomeCompleto: true } }
     },
   });
 
-  const totalLogs = await prisma.logEntry.count();
+  const totalLogs = await prisma.logEntry.count({ where: whereClause });
   const totalPages = Math.ceil(totalLogs / pageSize);
   
-  // Garante que os dados de data são serializáveis (texto) antes de passar para o componente
   const logs = logsFromDb.map(log => ({
     ...log,
     createdAt: log.createdAt.toISOString(),
   }));
-
 
   return (
     <div className="p-4 sm:p-8">
@@ -60,6 +61,8 @@ export default async function LogsPage({ searchParams }: LogsPageProps) {
             Histórico de eventos importantes do sistema.
           </p>
         </div>
+        
+        <LogFilterControls currentAction={searchParams.action} />
 
         <div className="flow-root">
             {/* Visualização em Cards para Mobile */}
@@ -69,6 +72,12 @@ export default async function LogsPage({ searchParams }: LogsPageProps) {
                   <div key={log.id} className="bg-gray-50 p-4 rounded-md border">
                     <p className="font-medium text-gray-800 break-words">{log.message}</p>
                     <div className="mt-2 text-xs text-gray-500 space-y-1">
+                      <p>
+                        <strong>Ação:</strong>
+                        <span className="ml-2 inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
+                          {log.action}
+                        </span>
+                      </p>
                       <p>
                         <strong>Usuário:</strong> {log.user?.name || 'Sistema'}
                       </p>
@@ -83,7 +92,7 @@ export default async function LogsPage({ searchParams }: LogsPageProps) {
                     </div>
                   </div>
                 )) : (
-                   <p className="text-center text-gray-500 py-4">Nenhum log encontrado.</p>
+                   <p className="text-center text-gray-500 py-4">Nenhum log encontrado para os filtros selecionados.</p>
                 )}
               </div>
             </div>
@@ -94,39 +103,29 @@ export default async function LogsPage({ searchParams }: LogsPageProps) {
                     <table className="min-w-full divide-y divide-gray-300">
                     <thead>
                         <tr>
-                        <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
-                            Data / Hora
-                        </th>
-                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                            Evento
-                        </th>
-                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                            Usuário
-                        </th>
-                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                            Romaneio Associado
-                        </th>
+                          <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">Data / Hora</th>
+                          <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Tipo de Ação</th>
+                          <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Evento</th>
+                          <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Usuário</th>
+                          <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Romaneio Associado</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 bg-white">
                         {logs.length > 0 ? logs.map((log) => (
                         <tr key={log.id}>
-                            <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">
-                              {new Date(log.createdAt).toLocaleString('pt-BR')}
-                            </td>
-                            <td className="py-4 px-3 text-sm text-gray-800 max-w-sm break-words">
-                            {log.message}
-                            </td>
+                            <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">{new Date(log.createdAt).toLocaleString('pt-BR')}</td>
                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {log.user?.name || 'Sistema'}
+                              <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
+                                {log.action}
+                              </span>
                             </td>
-                            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {log.romaneio?.nomeCompleto || 'N/A'}
-                            </td>
+                            <td className="py-4 px-3 text-sm text-gray-800 max-w-sm break-words">{log.message}</td>
+                            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{log.user?.name || 'Sistema'}</td>
+                            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{log.romaneio?.nomeCompleto || 'N/A'}</td>
                         </tr>
                         )) : (
                             <tr>
-                                <td colSpan={4} className="text-center py-10 text-gray-500">Nenhum log encontrado.</td>
+                                <td colSpan={5} className="text-center py-10 text-gray-500">Nenhum log encontrado para os filtros selecionados.</td>
                             </tr>
                         )}
                     </tbody>

@@ -1,4 +1,4 @@
-// components/FilterControls.tsx - VERSÃO RESPONSIVA
+// components/FilterControls.tsx - VERSÃO CORRETA E COMPLETA
 
 'use client';
 
@@ -41,6 +41,9 @@ export default function FilterControls({ currentStatus }: FilterControlsProps) {
   };
 
   const handleClear = () => {
+    setSearchTerm('');
+    setStartDate('');
+    setEndDate('');
     router.push(pathname);
   };
 
@@ -87,7 +90,6 @@ export default function FilterControls({ currentStatus }: FilterControlsProps) {
         </div>
 
       <form onSubmit={handleFilter}>
-        {/* CLASSE GRID ATUALIZADA PARA SER RESPONSIVA */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
           <div className="lg:col-span-2">
             <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
