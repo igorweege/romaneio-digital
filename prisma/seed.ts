@@ -1,4 +1,4 @@
-// prisma/seed.ts
+// prisma/seed.ts - VERSÃO ATUALIZADA COM SUPER ADMIN
 
 import { PrismaClient, Role } from '@prisma/client';
 import bcrypt from 'bcryptjs';
@@ -8,26 +8,26 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Start seeding ...');
 
-  const emailAdmin = 'igor@osirnet.com.br';
+  const emailAdmin = 'ti@osirnet.com.br';
   
   // Apaga o usuário se ele já existir, para podermos rodar o script várias vezes
-  // Isso evita erros caso o usuário já tenha sido criado.
   await prisma.user.delete({ where: { email: emailAdmin } }).catch(() => {
-    console.log('Admin user not found, creating a new one...');
+    console.log('Super Admin user not found, creating a new one...');
   });
 
+  // A senha continua sendo a mesma para facilitar, você pode alterá-la depois
   const hashedPassword = await bcrypt.hash('Mudar1234', 10);
 
   const admin = await prisma.user.create({
     data: {
-      name: 'Igor Weege',
+      name: 'Admin TI Osirnet', // Nome do super admin
       email: emailAdmin,
       password: hashedPassword,
       role: Role.ADMIN,
     },
   });
 
-  console.log(`Created admin user: ${admin.name} (ID: ${admin.id})`);
+  console.log(`Created admin user: ${admin.name} (${admin.email})`);
   console.log('Seeding finished.');
 }
 

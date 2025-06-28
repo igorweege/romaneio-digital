@@ -1,4 +1,4 @@
-// prisma/schema.prisma - VERSÃO COM TABELA DE LOGS
+// prisma/schema.prisma - VERSÃO COM AÇÃO DE LOG
 
 generator client {
   provider = "prisma-client-js"
@@ -18,7 +18,7 @@ model User {
   createdAt DateTime   @default(now())
   
   romaneios Romaneio[]
-  logs      LogEntry[] // Relação: Um usuário pode ter várias entradas de log
+  logs      LogEntry[]
 }
 
 model Romaneio {
@@ -39,7 +39,7 @@ model Romaneio {
   author            User      @relation(fields: [authorId], references: [id])
   authorId          String
 
-  logs              LogEntry[] // Relação: Um romaneio pode ter várias entradas de log
+  logs              LogEntry[]
 }
 
 enum Role {
@@ -47,13 +47,22 @@ enum Role {
   USER
 }
 
-// NOVO MODELO PARA OS LOGS
+// NOVO ENUM PARA PADRONIZAR AS AÇÕES
+enum LogAction {
+  USER_LOGIN
+  USER_CREATED
+  USER_UPDATED
+  USER_ROLE_CHANGED
+  ROMANEIO_CREATED
+  ROMANEIO_SIGNED
+}
+
 model LogEntry {
   id         String    @id @default(cuid())
-  message    String    // Mensagem do log (ex: "Usuário Igor criou o romaneio para Cliente X")
+  message    String
+  action     LogAction // NOVO CAMPO ADICIONADO
   createdAt  DateTime  @default(now())
 
-  // Relações opcionais para rastreamento
   userId     String?
   user       User?     @relation(fields: [userId], references: [id])
   
