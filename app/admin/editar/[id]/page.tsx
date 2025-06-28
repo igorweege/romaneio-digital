@@ -1,10 +1,11 @@
-// app/admin/editar/[id]/page.tsx - VERSÃO COM CAMPOS DE SENHA
+// app/admin/editar/[id]/page.tsx - VERSÃO COM NOTIFICAÇÕES TOAST
 
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User } from '@prisma/client';
+import toast from 'react-hot-toast'; // 1. Importamos o toast
 
 interface EditUserPageProps {
   params: {
@@ -21,7 +22,6 @@ export default function EditUserPage({ params }: EditUserPageProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -35,7 +35,7 @@ export default function EditUserPage({ params }: EditUserPageProps) {
         setName(userData.name);
         setRole(userData.role);
       } catch (err: any) {
-        setError(err.message);
+        toast.error(err.message);
       } finally {
         setIsLoading(false);
       }
@@ -45,10 +45,9 @@ export default function EditUserPage({ params }: EditUserPageProps) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
 
     if (password !== confirmPassword) {
-      setError('As senhas não coincidem.');
+      toast.error('As senhas não coincidem.');
       return;
     }
 
@@ -70,27 +69,31 @@ export default function EditUserPage({ params }: EditUserPageProps) {
         body: JSON.stringify(dataToUpdate),
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Falha ao atualizar o usuário.');
+        throw new Error(responseData.error || 'Falha ao atualizar o usuário.');
       }
       
-      alert('Usuário atualizado com sucesso!');
+      // 2. Substituímos o alert()
+      toast.success('Usuário atualizado com sucesso!');
       router.push('/admin');
       router.refresh();
 
     } catch (err: any) {
-      setError(err.message);
+      // 3. Usamos toast.error() para erros
+      toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
   };
 
   if (isLoading) return <p className="text-center p-8">Carregando...</p>;
+  if (!user) return <p className="text-center p-8 text-red-600">Erro ao carregar usuário.</p>
 
   return (
     <div className="p-4 sm:p-8">
-      <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-sm">
+      <div className="bg-white p-6 rounded-lg shadow-sm max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Editar Usuário</h1>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -102,7 +105,7 @@ export default function EditUserPage({ params }: EditUserPageProps) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-osirnet-blue focus:border-osirnet-blue"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-osirnet-dark-blue focus:border-osirnet-dark-blue"
               />
             </div>
           </div>
@@ -127,7 +130,7 @@ export default function EditUserPage({ params }: EditUserPageProps) {
                 id="role"
                 value={role}
                 onChange={(e) => setRole(e.target.value as 'USER' | 'ADMIN')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-osirnet-blue focus:border-osirnet-blue"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-osirnet-dark-blue focus:border-osirnet-dark-blue"
               >
                 <option value="USER">Usuário</option>
                 <option value="ADMIN">Administrador</option>
@@ -135,7 +138,6 @@ export default function EditUserPage({ params }: EditUserPageProps) {
             </div>
           </div>
           
-          {/* CAMPOS DE NOVA SENHA */}
           <div className="border-t pt-6 mt-6">
              <h2 className="text-lg font-medium text-gray-700">Alterar Senha</h2>
              <p className="text-sm text-gray-500">Deixe em branco para não alterar a senha atual.</p>
@@ -149,7 +151,7 @@ export default function EditUserPage({ params }: EditUserPageProps) {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-osirnet-blue focus:border-osirnet-blue"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-osirnet-dark-blue focus:border-osirnet-dark-blue"
               />
             </div>
           </div>
@@ -162,14 +164,12 @@ export default function EditUserPage({ params }: EditUserPageProps) {
                 id="confirmPassword"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-osirnet-blue focus:border-osirnet-blue"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-osirnet-dark-blue focus:border-osirnet-dark-blue"
               />
             </div>
           </div>
 
-          {error && <p className="text-sm text-red-600 text-center">{error}</p>}
-
-          <div className="flex items-center justify-end gap-x-4">
+          <div className="flex items-center justify-end gap-x-4 border-t pt-6">
             <button type="button" onClick={() => router.push('/admin')} disabled={isLoading} className="text-sm font-semibold leading-6 text-gray-900">
               Cancelar
             </button>
