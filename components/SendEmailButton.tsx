@@ -1,4 +1,4 @@
-// components/SendEmailButton.tsx
+// components/SendEmailButton.tsx - VERSÃO COM LAYOUT CORRIGIDO
 
 'use client';
 
@@ -53,7 +53,8 @@ export default function SendEmailButton({ romaneioId, defaultEmail }: { romaneio
       </button>
 
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Enviar Link de Assinatura">
-        <div className="p-4">
+        {/* AQUI A MUDANÇA: adicionamos 'break-words' */}
+        <div className="p-4 break-words">
           <p className="text-sm text-gray-600 mb-4">
             Insira o email do destinatário. Se o romaneio já tiver um email cadastrado, ele será preenchido automaticamente.
           </p>
