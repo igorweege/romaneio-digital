@@ -1,4 +1,4 @@
-// components/SendEmailButton.tsx - VERSÃO COM LAYOUT INTERNO CORRIGIDO
+// components/SendEmailButton.tsx - VERSÃO COM LAYOUT CORRIGIDO
 
 'use client';
 
@@ -53,22 +53,28 @@ export default function SendEmailButton({ romaneioId, defaultEmail }: { romaneio
       </button>
 
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Enviar Link de Assinatura">
-        {/* A estrutura interna do modal foi reorganizada com flexbox */}
-        <div className="flex flex-col space-y-4 p-1">
+        {/* A estrutura interna do modal foi reorganizada com flexbox e space-y */}
+        <div className="p-2 flex flex-col space-y-4">
           <p className="text-sm text-gray-600">
             Insira o email do destinatário. Se o romaneio já tiver um email cadastrado, ele será preenchido automaticamente.
           </p>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="email@exemplo.com"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-osirnet-dark-blue focus:border-osirnet-dark-blue"
-          />
+          
+          <div>
+            <label htmlFor="send-email-input" className="sr-only">Email</label>
+            <input
+              id="send-email-input"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="email@exemplo.com"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-osirnet-dark-blue focus:border-osirnet-dark-blue"
+            />
+          </div>
+
           <div className="pt-2 flex justify-end gap-x-3">
             <button
               onClick={() => setIsOpen(false)}
-              className="text-sm font-semibold text-gray-900"
+              className="text-sm font-semibold text-gray-900 px-4 py-2"
               disabled={isLoading}
             >
               Cancelar
