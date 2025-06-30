@@ -1,4 +1,4 @@
-// components/SendEmailButton.tsx - VERSÃO COM LAYOUT CORRIGIDO
+// components/SendEmailButton.tsx - VERSÃO COM LAYOUT INTERNO CORRIGIDO
 
 'use client';
 
@@ -53,9 +53,9 @@ export default function SendEmailButton({ romaneioId, defaultEmail }: { romaneio
       </button>
 
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Enviar Link de Assinatura">
-        {/* AQUI A MUDANÇA: adicionamos 'break-words' para forçar a quebra do texto */}
-        <div className="p-4 break-words">
-          <p className="text-sm text-gray-600 mb-4">
+        {/* A estrutura interna do modal foi reorganizada com flexbox */}
+        <div className="flex flex-col space-y-4 p-1">
+          <p className="text-sm text-gray-600">
             Insira o email do destinatário. Se o romaneio já tiver um email cadastrado, ele será preenchido automaticamente.
           </p>
           <input
@@ -65,7 +65,7 @@ export default function SendEmailButton({ romaneioId, defaultEmail }: { romaneio
             placeholder="email@exemplo.com"
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-osirnet-dark-blue focus:border-osirnet-dark-blue"
           />
-          <div className="mt-6 flex justify-end gap-x-3">
+          <div className="pt-2 flex justify-end gap-x-3">
             <button
               onClick={() => setIsOpen(false)}
               className="text-sm font-semibold text-gray-900"
